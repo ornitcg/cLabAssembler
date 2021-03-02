@@ -1,10 +1,10 @@
 all: prog
 
-prog: assembler.o utilsGeneral.o as_funcs.o
-	gcc -ansi -g -Wall -pedantic -o prog assembler.o utilsGeneral.o as_funcs.o
+prog: assembler.o utilsGeneral.o as_funcs.o utilsAssembler.o
+	gcc -ansi -g -Wall -pedantic -o prog assembler.o utilsGeneral.o as_funcs.o utilsAssembler.o
 
-#file1.o: file1.c headers.h
-#	gcc -ansi -g -Wall -pedantic -c file1.c
+utilsAssembler.o: utilsAssembler.c utilsAssembler.h
+	gcc -ansi -g -Wall -pedantic -c utilsAssembler.c
 
 
 as_funcs.o: as_funcs.c as_funcs.h
