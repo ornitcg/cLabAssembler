@@ -7,9 +7,27 @@
 #include "as_funcs.h"
 #include "utilsGeneral.h"
 #include "utilsAssembler.h"
+#include "structsAndMacros.h"
 
+void DO_SOMETHING(){
+  /*for place holding*/
+}
+
+int detectedCommand(char* str){
+    return NO;
+}
+void initStatus(STATUS* stat){
+    (*stat).IC = INIT_ADDRESS;    /*instructions counter*/
+    (*stat).DC = 0;      /*data counter*/
+    (*stat).errorExists = NO;  /*errors flag*/
+    (*stat).symbolFound = NO;  /*symbols flag*/
+}
+char* parseLabel(char* line,STATUS* stat){
+
+    return NULL;
+}
 char* parseNext(char* line, char* delimiter){
-  return NULL;
+    return NULL;
 }
 
 /*
@@ -18,7 +36,7 @@ char* parseNext(char* line, char* delimiter){
   returns:   1 if found, and 0 otherwise
 */
 int containsLabelDef(char* line){
-  if (strchr(line, LABEL_IDENTIFIER)!= NULL)
+  if (strchr(line, LABEL_IDENTIFIER_INT)!= NULL)
     return YES;
   return NO;
 }
@@ -30,7 +48,7 @@ int labelIsValid(char* label){
 }
 
 int toIgnore(char* line){
-    if (strlen(line) == 0 || line[0] == COMMENT_IDENTIFIER)
+    if (strlen(line) == 0 || line[0] == COMMENT_IDENTIFIER_INT)
         return YES;
     return NO;
 }
@@ -48,4 +66,13 @@ short int buildFirstWord(FIRST_WORD w){
   w.opcode = w.opcode << 8 ;
   res =  w.dest | w.src |w.funct | w.opcode ;
   return res;
+}
+
+/*updates the data table so that every
+data symbol is given a shift at the size of ICF
+params: int ICF -  the size to add to data symbols
+        data table - to be updated with ICF
+ */
+void updateDataTable(int ICF){
+
 }

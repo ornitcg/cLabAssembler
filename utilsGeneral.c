@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "utilsAssembler.h"
 #include "utilsGeneral.h"
 
 #define EXT_AS ".as"
@@ -42,7 +41,7 @@ void remLastChar(char* string){
 }
 /*removes leading and trailing whitespaces from a string
 params: char* str -  the string to trim
-returns: the trimmed string
+returns: the trimmed string (in different ways of use for different types of strings)
 */
 char* trimWhiteSpaces(char* str){
     int last;
