@@ -57,7 +57,13 @@ char* trimWhiteSpaces(char* str){
     }
     return str;
 }
-
+int externalCommas(char* line){
+    int len = strlen(line);
+    if (len > 0)
+        if (line[0] == COMMA || line[len-1] == COMMA )
+            return YES;
+    return NO;
+}
 /*
 Checks if a charachter is a space or tab
 params: char c- the charachter to check
@@ -67,4 +73,30 @@ int isWhiteSpace(char c){
   if ((c == ' ') || (c =='\t') || (c =='\n'))
     return YES;
   return NO;
+}
+
+int firstPosOfChar(char* string, char targetChar){
+    int pos = 0;
+    if (strlen(string) == 0)
+        return -1;
+    while (string[pos] != '\0'){
+        if (string[pos] == targetChar)
+            return pos;
+        pos++;
+    }
+    return -1;
+}
+/*asuming input has no heading or tailing whitespaces*/
+int validAsNumber(char* string){
+    int cursor = 0;
+    if (strlen(string)==0 )
+        return NO;
+    if (string[0] == '-' || string[0]=='+')
+        cursor++;
+    while(string[cursor] != '\0'){
+        if ( sring[string[cursor] < 48 || string[cursor] > 57 )
+            return NO;
+        cursor++;
+    }
+    return YES;
 }

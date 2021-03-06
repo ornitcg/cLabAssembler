@@ -1,20 +1,22 @@
 all: prog
 
-prog: assembler.o utilsGeneral.o as_funcs.o utilsAssembler.o
-	gcc -ansi -g -Wall -pedantic -o prog assembler.o utilsGeneral.o as_funcs.o utilsAssembler.o
+prog: assembler.o utilsGeneral.o as_funcs.o utilsAssembler.o #linkedList.o
+	gcc -ansi -g -Wall -pedantic -o prog assembler.o utilsGeneral.o as_funcs.o utilsAssembler.o #linkedList.o
 
-utilsAssembler.o: utilsAssembler.c utilsAssembler.h structsAndMacros.h
+utilsAssembler.o: utilsAssembler.c utilsAssembler.h asStructsAndMacros.h
 	gcc -ansi -g -Wall -pedantic -c utilsAssembler.c
 
-as_funcs.o: as_funcs.c as_funcs.h structsAndMacros.h
-	gcc -ansi -g -Wall -pedantic -c as_funcs.c
-
-assembler.o: assembler.c utilsGeneral.h structsAndMacros.h
+assembler.o: assembler.c utilsGeneral.h asStructsAndMacros.h
 	gcc -ansi -g -Wall -pedantic  -c assembler.c
 
-structsAndMacros.o: structsAndMacros.c
-	gcc -ansi -g -Wall -pedantic -c structsAndMacros.c
+as_funcs.o: as_funcs.c as_funcs.h asStructsAndMacros.h #linkedList.h
+	gcc -ansi -g -Wall -pedantic -c as_funcs.c
 
+asStructsAndMacros.o: asStructsAndMacros.c #linkedList.h
+	gcc -ansi -g -Wall -pedantic -c asStructsAndMacros.c
+
+#linkedList.o: linkedList.c linkedList.h
+#	gcc -ansi -g -Wall -pedantic -c linkedList.c
 
 utilsGeneral.o: utilsGeneral.c
 	gcc -ansi -g -Wall -pedantic -c utilsGeneral.c

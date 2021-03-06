@@ -1,11 +1,13 @@
-#include "structsAndMacros.h"
+#include "asStructsAndMacros.h"
 
 /*
   Group of helper functions that are related to assembler
 */
 
 void DO_SOMETHING();
-char* parseLabel(char* line,STATUS* stat);
+int parseSymbol(char* symbol , char* line);
+int parseInstruction(char* Instruction , char* line);
+
 /*
   Checks the possibility of the line to contain a label by searching for a ':'
   params:   char* line - the string to search for a label in
@@ -24,3 +26,13 @@ char* parseNext(char* line, char* delimiter);
 int toIgnore(char* line);
 void initStatus(STATUS* stat);
 int detectedCommand(char* str);
+
+/*****************************************FIRST WORD STRUCTURE*********************************************/
+
+struct FIRST_WORD{
+  short dest;
+  short src;
+  short funct;
+  short opcode;
+};
+typedef struct FIRST_WORD FIRST_WORD;

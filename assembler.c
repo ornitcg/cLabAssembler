@@ -4,7 +4,7 @@ Author: Ornit Cohen Gindi
 Assumptions:
 maximum length of line is 80
 no comments in middle of line.
-
+using the words 'symbol' and 'label' interchangably for labelIsValid
 */
 
 
@@ -14,7 +14,7 @@ no comments in middle of line.
 #include "as_funcs.h"
 #include "utilsGeneral.h"
 #include "utilsAssembler.h"
-#include "structsAndMacros.h"
+#include "asStructsAndMacros.h"
 
 
 

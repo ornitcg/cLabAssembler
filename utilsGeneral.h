@@ -32,5 +32,6 @@ params: char c- the charachter to check
 returns: 1 (YES) if c is a whitespace , and 0 (NO) otherwise
 */
 int isWhiteSpace(char c);
-
+int externalCommas(char* line);
+int validSymbolChars(char* symbol);
 #endif
