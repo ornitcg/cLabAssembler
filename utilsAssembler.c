@@ -53,7 +53,7 @@ int parseData(char* line, DATA_IMG** dataImg, int statDC){
         /*now we have a dataString that is supposed to be a data item*/
         if (validAsNumber(dataString)){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
             data = atoi(dataString); /*invert string to number*/
-            updateDataImage(data, statDC ); /*add data to data image*/
+            updateDataImage(data, statDC, dataImg); /*add data to data image*/
             statDC ++;
         }
         else{
@@ -61,7 +61,6 @@ int parseData(char* line, DATA_IMG** dataImg, int statDC){
             stat.errorExists = YES;
             return statDC;
         }
-
     }/*end while*/
     return dc; /*number of data items found*/
 }
@@ -131,9 +130,7 @@ int validSymbolChars(char* symbol){ /*OK*/
     return YES;
 }
 
-char* parseNext(char* line, char* delimiter){
-    return NULL;
-}
+
 
 /*
   Checks the possibility of the line to contain a label by searching for a ':'
@@ -145,12 +142,7 @@ int containsLabelDef(char* line){
     return YES;
   return NO;
 }
-/*checks validity of label*/
-int labelIsValid(char* label){
 
-    return YES;
-  return NO;
-}
 
 int toIgnore(char* line){
     if (strlen(line) == 0 || line[0] == COMMENT_IDENTIFIER_INT)
@@ -171,13 +163,4 @@ short int buildFirstWord(FIRST_WORD w){
   w.opcode = w.opcode << 8 ;
   res =  w.dest | w.src |w.funct | w.opcode ;
   return res;
-}
-
-/*updates the data table so that every
-data symbol is given a shift at the size of ICF
-params: int ICF -  the size to add to data symbols
-        data table - to be updated with ICF
- */
-void updateDataTable(int ICF){
-
 }

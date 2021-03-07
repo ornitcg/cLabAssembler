@@ -18,75 +18,57 @@
 #define IMMEDIATE_IDENTIFIER "#"
 #define RELATIVE_IDENTIFIER "%"
 
-enum attribute {Code , Data,  Entry, External};
-enum inst {NO, Data, String, Entry, Extern};
-
+enum attribute {None, Code , Data,  Entry, External};
+enum inst {None, Data, String, Entry, Extern};
+typedef enum attribute attribute;
+typedef enum inst inst;
 
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/
 
-struct STATUS { /*to use as PSW*/
+typedef struct  { /*to use as PSW*/
     int IC;
     int DC;
-    int lineNumber;
+    int lineNumberInInput;
     enum inst instType;
     int errorExists; /*YES/NO*/
     int symbolFound; /*YES/NO*/
-};
-typedef struct STATUS STATUS;
+} STATUS;
 
 
 /**************************************************SYMBOL TABLE*****************************************/
-struct SYMBOL {
-    int dcStat;
+typedef struct SYMBOL {
     char symbol[MAX_LABEL];
     enum attribute attr1;
     enum attribute attr2; /*sometimes there maybe 2 attributes*/
-};
-typedef struct SYMBOL SYMBOL;
-
-void addSymbol();
+} SYMBOL;
+void addSymbol(LinkedList* symbolTable, short key, char* symbol, attribute attr1, attribute attr2);
 
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
-struct CODE_IMG {
-    int icStat;
+typedef struct CODE_IMG {
     char inputLine[MAX_LINE];
-    short data;
-    short machineCode;
-    struct CODE_IMG* prev;
-    struct CODE_IMG* next;
-
-};
-typedef struct CODE_IMG CODE_IMG;
-
-void addCode(CODE_IMG* codeImg);
+    short code;
+    char ARE;
+} CODE_IMG;
+void addCode(CODE_IMG* codeTable, short key, char* inputLine, short code, char ARE);
 
 /*********************************************DATA TABLE*******************************************************/
+typedef struct DATA_IMG {
+    short data;
+    char ARE;
+} DATA_IMG;
 
-struct DATA_IMG{
-    int dcStat;
-    char inputLine[MAX_LINE];
-    short machineCode;
-    struct DATA_IMG* prev;
-    struct DATA_IMG* next;
-
-};
-typedef struct DATA_IMG DATA_IMG;
-
-void addData(DATA_IMG* codeImg);
-
-
+void addData(CODE_IMG* dataTable, short key, short data, char ARE);
 
 /*****************************************COMMAND (CMD) TABLE*********************************************/
 
 
 /*This is the table of 16 commands, to be defined int the first pass function using macro*/
-struct COMMAND{
+typedef struct {
     short int opcode;
     short int funct;
     short int operators;
     char command[MAX_CMD_LEN];
-};
-typedef struct COMMAND CMD_TABLE;
+}COMMAND;
 
 #define SET_CMD_TABLE(cmd) CMD_TABLE cmd[16];\
   cmd[0].opcode=0; cmd[0].funct=0; cmd[0].operators=2; strcpy(cmd[0].command, "mov");\
