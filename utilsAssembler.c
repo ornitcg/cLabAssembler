@@ -12,10 +12,16 @@
 void DO_SOMETHING(){
   /*for place holding*/
 }
-
+SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol)/*del*/
 
 info parseExtern(line, &stat){
-
+    SYMBOL* symBody;
+    symBody = lookupSymbol(stat->symbolTable , line);
+    if (symBody == NULL) /*not Found in symbol table*/
+        return Ok;
+    if (symBody -> attr1 == Extern || symBody -> attr2 == Extern) /*found in symbol table, checking the attributes*/
+        return Error;
+    return No; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 }
 
 

@@ -23,7 +23,7 @@
 
 
 
-enum info {No, Yes, Code , Data, String,  Entry, Extern , Empty ,Error = -1};
+enum info {No, Yes, Ok, Code , Data, String,  Entry, Extern , Empty ,Error = -1};
 typedef enum info info;
 
 
@@ -47,7 +47,7 @@ typedef struct SYMBOL {
     enum info attr2; /*sometimes there maybe 2 attributes*/
 } SYMBOL;
 void addSymbol(LinkedList* symbolTable, short key, char* symbol, info attr1, info attr2);
-info lookupSymbol(LinkedList* symbolTable, char* symbol);
+SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
     char inputLine[MAX_LINE];

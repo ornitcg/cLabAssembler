@@ -2,14 +2,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-info lookupSymbol(LinkedList* symbolTable, char* symbol){
+SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
     Node* cursor = symbolTable -> head;
     while (cursor != NULL) {
         if ( strcmp(cursor.keyStr, symbol) == 0)
-            return Yes;
+            return cursor -> body;
         cursor = cursor.next;
     }
-    return No;
+    return NULL;
 }
 
 

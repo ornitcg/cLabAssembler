@@ -56,6 +56,11 @@ int firstPass(FILE* inputFile , Status* stat){
                     }
                 }else if  ( instType == Extern ){
                     res = parseExtern(line, &stat);
+                    if (res == Ok)
+                        addSymbol(symbolTable, 0 , symbol, Extern, Empty);
+                    else if (res == Error)
+                        stat -> errorExists = Yes;
+                    }
                 }else /*no instruction - proceed to parsing command and operands*/
             }
 
