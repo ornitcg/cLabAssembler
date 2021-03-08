@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "as_funcs.h"
+#include "linkedList.h"
 #include "utilsGeneral.h"
 #include "utilsAssembler.h"
 #include "asStructsAndMacros.h"
@@ -15,90 +16,154 @@ void DO_SOMETHING(){
 int detectedCommand(char* str){
     return NO;
 }
-void initStatus(STATUS* stat){
-    (*stat).IC = INIT_ADDRESS;    /*instructions counter*/
-    (*stat).DC = 0;      /*data counter*/
-    (*stat).lineNumber = 1;      /*line number in code*/
-    (*stat).errorExists = NO;  /*errors flag*/
-    (*stat).symbolFound = NO;  /*symbols flag*/
+info parseExtern(line, &stat){
+
 }
 
-int parseData(char* line, DATA_IMG** dataImg, int statDC){
-    int dc = 0;
+
+info parseStringData(char* string, STATUS* stat){
+    if(line[0] == '"' && line[strlen[line]]== '"'){
+        line[strlen[line]]= '\0';
+        line++;
+        while(line[0]!= '\0'){
+            addData(stat -> dataTable, stat -> DC , line[0] ,'A');
+            (stat -> DC)++;
+        }
+        return String;
+    }
+    else{
+        printf("line#%d: Error - Invalid string", stat -> lineNumber);
+        return Error;
+    }
+}
+
+info parseNumbersData(line, &stat){
     int cursor = 0;
     short data;
     char dataString[MAX_LINE];
-
-    if (strlen(line) == 0 ){
-        printf("line#%d: Error - Missing data");
-        stat.errorExists = YES;
-        return dc; /*returns 0 number of data arguments*/
-    }
     while (line[0] != '\0'){
         if (externalCommas(line)){
-            printf("line#%d: Error - Invalid commas");
-            stat.errorExists = YES;
-            return dc;
+            printf("line#%d: Error - Invalid commas", stat -> lineNumber);
+            return Error;
         }
-        cursor =  firstPosOfChar(line, COMMA); /*find the first colon position*/
-        if (cursor > -1) { /*no commas in data */
-            strncopy(dataString, line ,cursor);
+        cursor =  firstPosOfChar(line, COMMA); /*find the first colon position returns -1 if no comma found*/
+        if (cursor > -1) { /*case comma found in data */
+            strncpy(dataString, line ,cursor); /*take a piece of string up to comma, into dataString*/
             strcpy(line, trimWhiteSpaces(&line[strlen(dataString)+1])); /*remove the data string piece from line, and trim whitespaces*/
             strcpy(dataString, trimWhiteSpaces(dataString)); /*trim whitespaces from the piece of datastring*/
         }
         else {
-                strcopy(dataString, line);
+                strcpy(dataString, line);
                 line[0] = '\0';
             }
         /*now we have a dataString that is supposed to be a data item*/
-        if (validAsNumber(dataString)){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
+        if (validAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
             data = atoi(dataString); /*invert string to number*/
-            updateDataImage(data, statDC, dataImg); /*add data to data image*/
-            statDC ++;
+            if (validInWordRange(data) == YES){
+                addData(stat -> dataTable ,stat -> DC , data, 'A'); /*add data to data image*/
+                (stat -> DC)++;
+            }
+            else{
+                printf("line#%d: Error - Data out of range", stat->lineNumber);
+                return Error;
+            }
         }
         else{
-            printf("line#%d: Error - Invalid data");
-            stat.errorExists = YES;
-            return statDC;
+            printf("line#%d: Error - Invalid data", stat->lineNumber);
+            return Error;
         }
     }/*end while*/
-    return dc; /*number of data items found*/
+    return Data;
 }
 
 
+info parseData(char* line, info type, STATUS* stat){
+    if (strlen(line) == 0 ){
+        printf("line#%d: Error - Missing data");
+        return Error;
+    }
+    if (type == String)
+        return parseStringData(line, &stat);
+    else
+        return parseNumbersData(line, &stat);
+}
 
-/*need to add the line numbers*/
-enum inst parseSymbol(char* symbol , char* line){
+/* returns Yes/No/Error*/
+info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
-    fprintf(stderr, "DEBUG in parseLabel for line: --%s--\n",line);
+    char tmpSymbol[MAX_LINE];
+    info ans;
+    printf( "DEBUG in parseLabel for line: --%s--\n",line);
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
-
-    if ((strlen(line) == 0) || (cursor == -1)){
-        return NO;
+    if ((strlen(line) == 0) || (cursor == NOT_FOUND)){
+        return No;
     }
-    strncpy(symbol, line, cursor ); /*get the string part until the colon sign*/
-    symbol[cursor] = '\0';
-    if (cursor >= MAX_LABEL){
-        fprintf(stderr,"line#: Label is too long: %s  \n", symbol);
-        return NO;
+    strncpy(tmpSymbol, line, cursor ); /*get the string part until the colon sign*/
+    tmpSymbol[cursor] = '\0';
+    ans = validAsSymbol(tmpSymbol);
+    if (lookupSymbol(stat-> symbolTable, tmpSymbol) == Yes){
+        printf("line# %d: Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
+        return Error;
     }
-    if (!validSymbolChars(symbol)){
-        fprintf(stderr, "line# : Invalid charachters in label %s \n", symbol);
-        return NO;
+    if (valid == Yes){
+        strncpy(symbol, line, cursor ); /*get the string part until the colon sign*/
+        return Yes ;
     }
-    return YES ;
+    return ans;
 }
 
+info validAsSymbol(char* string){
+    if (strlen(string) > MAX_LABEL){
+        printf("line# %d: Label is too long: %s  \n",  stat -> lineNumber,symbol);
+        return Error;
+    }
+    if (!validSymbolChars(symbol)){
+        printf("line# %d: Invalid charachters in label %s \n",  stat -> lineNumber, symbol);
+        return Error;
+    }
+    if (isReservedWord(string) == Yes){
+        printf("line# %d: Label %s must't be a reserved word \n",  stat -> lineNumber, symbol);
+        return Error;
+    }
+    return Yes;
+}
+
+info isReservedWord(char* string){
+    SET_RESERVED_ARR(resv);
+
+        return Yes;
+    return No;
+}
+
+int lookupRegister(char* string){
+    SET_REG_ARR(regs);
+    int i;
+    for(i = 0; i < REGISTERS_NUMBER ; i++)
+        if(strcmp(regs[i],string) ==0 )
+            return i;
+    return NOT_FOUND;
+}
+
+int lookupCommand(char* string){
+    int i;
+    SET_COMMAND_TABLE(cmdTable);
+
+    for(i = 0; i < COMMANDS_NUMBER ; i++)
+        if(strcmp(cmdTable[i].command,string) == 0 )
+            return i;
+    return NOT_FOUND;
+}
 
 /*need to add the line numbers*/
-int  parseLabel(char* instruction , char* line, STATUS* stat){
+info  parseInstruction(char* instruction , char* line, STATUS* stat){
     int cursor = 0;
     fprintf(stderr, "DEBUG in parseLabel for line: --%s--\n",line);
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == -1)){
-        return NO;
+        instruction = EMPTY_STRING;
+        return No;
     }
     strncpy(instruction, line, cursor ); /*get the string part until the colon sign*/
     instruction[cursor] = '\0';
@@ -107,9 +172,11 @@ int  parseLabel(char* instruction , char* line, STATUS* stat){
         if (strcmp(instruction, ".string") == 0) return String;
         if (strcmp(instruction, ".extern") == 0) return Extern;
         if (strcmp(instruction, ".entry") == 0) return Entry;
-
+        printf("line#%d: Invalid instruction name", stat->lineNumber);
+        instruction = EMPTY_STRING;
+        return Error;
     }
-    return YES ;
+    return No;
 }
 
 
@@ -131,7 +198,6 @@ int validSymbolChars(char* symbol){ /*OK*/
 }
 
 
-
 /*
   Checks the possibility of the line to contain a label by searching for a ':'
   params:   char* line - the string to search for a label in
@@ -143,6 +209,11 @@ int containsLabelDef(char* line){
   return NO;
 }
 
+int validInWordRange(short num){
+    if(num >= 2048 && num <= 2047)
+        return YES;
+    return NO;
+ }
 
 int toIgnore(char* line){
     if (strlen(line) == 0 || line[0] == COMMENT_IDENTIFIER_INT)

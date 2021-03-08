@@ -5,6 +5,7 @@
 #define WHITE_SPACE " \t\n"
 #define YES 1
 #define NO 0
+#define NOT_FOUND -1
 /*
 Checks if the file name is valid and if it can be opened
 returns pointer to file if OK and NULL otherwise

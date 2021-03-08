@@ -15,48 +15,54 @@
   params: FILE* inputFile - pointer to the input assembly file
   returns: 1 if errors occured and 0 otherwise
 */
-int firstPass(FILE* inputFile , CMD_TABLE* cmd, SYMBOL_TABLE** symbolTable,DATA_IMG** dataImg, CODE_IMG** codeImg){
+int firstPass(FILE* inputFile , Status* stat){
     /***********************************************DECLARATIONS**********************************************************/
     /*regArr regs = {"r0","r1","r2", "r3","r4","r5","r6","r7"};*/
-    STATUS stat; /*to contain status details of current line*/
+
     /*int ICF = 0;*/      /*instructions counter - for final value*/
     /*int DCF = 0;*/      /*data counter - for final value*/
-    char line[MAX_LINE];  /*line of assembly code*/
-    char symbol[MAX_LABEL];       /*to contain the label from line*/
-    char instruction[MAX_INSTRUCTION];       /*to contain the label from line*/
-    char command[MAX_CMD];       /*to contain the label from line*/
-    enum inst instType;
+    char line[MAX_LINE];                       /*line of assembly code*/
+    char symbol[MAX_LABEL];                    /*to contain the label from line*/
+    char instruction[MAX_INSTRUCTION];         /*to contain the label from line*/
+    char command[MAX_CMD];                     /*to contain the label from line*/
+    info instType;                        /*stands for instruction type*/
+    info res;
     /*********************************************************************************************************/
+    SET_COMMAND_TABLE(cmdTable);      /*implemented by array of structures, all set by macro*/
 
-    initStatus(&stat);
+    while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
+        strcpy(line, trimWhiteSpaces(line));        /*removes whitespaces from both ends and also the '\n' for each line read from file*/
 
-    while(fgets(line, MAX_LINE, inputFile) != NULL){
-        strcpy(line, trimWhiteSpaces(line));     /*removes whitespaces from both end and also the '\n' for each line read from file*/
+        if (!toIgnore(line) ){
 
-        if (toIgnore(line)){
-            fprintf(stderr, "DEBUG line to ignore  %s\n",line);
-            lineCounter++;
-        }
-        else {
-            if (parseSymbol(symbol, line, &stat));{      /*relevant to lines that begin with label definition*/
-                    stat.symbolFound = YES;
-                    strcpy(line, trimWhiteSpaces(&line[strlen(symbol)+1])); /*restart line from end of label*/
-            }
-            instType = parseInstruction(instruction, line, &stat);
-            if ( instType == Data ){/*enum type*/
-                if (stat.symbolFound) addSymbol(symbolTable, symbol, stat.DC, /*enum*/instType);
+            res = parseSymbol(symbol, line, &stat);
+            stat -> symbolFound = res;  /*Yes/No/Error*/
+            if (res == Error)      /*relevant to lines that begin with label definition*/
+                stat -> errorExists = Yes;
+            else
+                strcpy(line, trimWhiteSpaces(&line[strlen(symbol)+1])); /*restart line from end of label*/
+
+            instType = parseInstruction(instruction, line, &stat); /*Yes/No/Error*/
+            if (instType == Error)
+                stat -> errorExists = Yes;
+            else {
                 strcpy(line, trimWhiteSpaces(&line[strlen(instruction)+1])); /*restart line from end of instruction*/
-                stat.DC += parseData(line, dataImg ,stat.DC);/*return 0 if data is wrong or None*/
+                if  ( instType == Data || instType == String ){
+                    if (stat -> symbolFound == Yes)
+                        addSymbol(symbolTable, (stat-> DC)+(stat->IC) , symbol, Data, Empty);
+                    res = parseData(line, instType, &stat);/*return 0 if data is wrong or None*/
+                    if (res == Error)
+                        stat -> errorExists = Yes;
+                    }
+                }else if  ( instType == Extern ){
+                    res = parseExtern(line, &stat);
+                }else /*no instruction - proceed to parsing command and operands*/
             }
-            /*else if ( instType == String )
-            else parseCommand(){
 
-            }
-        }/*end else*/
-
+        }/*end if not ignore*/
             /*fprintf(stderr, "firstPass  %s\n",line);*/
             /*fprintf(stderr, "length  %d\n",strlen(line));*/
-            stat.lineNumber++;
+        (stat -> lineNumber)++;
     }/*end while*/
     /*ICF = stat.IC;
     DCF = stat.DC;*/
@@ -64,20 +70,16 @@ int firstPass(FILE* inputFile , CMD_TABLE* cmd, SYMBOL_TABLE** symbolTable,DATA_
     return SOMETHING;
 }/*end of firstPass*/
 
-void secondPass(FILE* inputFile,char* fileName){
+void secondPass(FILE* inputFile, STATUS* stat){
 }
 
 
 void runAssembler(FILE* inputFile, char* fileName){
-
-    CODE_IMG* codeImg = NULL;            /*starting a linked list*/
-    DATA_IMG* dataImg = NULL;            /*starting a linked list*/
-    SYMBOL_TABLE* symbolTable = NULL;    /*starting a linked list*/
-    SET_CMD_TABLE(cmd);             /*implemented by array of structures, all set by macro*/
-
+    STATUS* stat;
+    initStat(&stat, fileName); /*to contain status details of current line*/
     fprintf(stderr, "******** DEBUG - in runAssembler\n");
-    firstPass(inputFile, cmd, &symbolTable, &dataImg, &codeImg);
+    firstPass(inputFile, stat);
     fseek(inputFile,0,SEEK_SET);
-    secondPass(inputFile,fileName);
+    secondPass(inputFile, stat);
 
 }

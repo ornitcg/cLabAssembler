@@ -1,3 +1,15 @@
+#ifndef _LINKE_LIST_
+#define _LINKE_LIST_
+#define MAX_STRING 100 /*some arbitrary general length*/
+
+typedef struct Node{
+    short keyNum;
+    char keyStr[MAX_STRING]; /*to enable Label sort of key*/
+    void* body;
+    struct Node* prev;
+    struct Node* next;
+} Node;
+
 typedef struct LinkedList {
     Node* head;
     Node* tail;
@@ -5,16 +17,14 @@ typedef struct LinkedList {
     size_t body_size;
 }LinkedList ;
 
-typedef struct Node{
-    short key;
-    void* body;
-    struct Node* prev;
-    struct Node* next;
-} Node;
 
 
 
-void appendNode(short key , void* body , LinkedList* ll);
+void appendNode(short keyNum, char* keyStr , void* body , LinkedList* ll);
 void printList(LinkedList* ll);
 void killList(LinkedList* ll);
 LinkedList* linkedListInit(size_t body_size);
+
+
+
+#endif

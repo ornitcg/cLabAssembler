@@ -12,12 +12,16 @@ LinkedList* linkedListInit(size_t bodySize){
     return ll;
 }
 
-void appendNode(short key , void* body , LinkedList* ll){
+void appendNode(short keyNum , char* keyStr , void* body , LinkedList* ll){
     Node* newNode = (Node*)malloc(sizeof(Node));
     size_t size = ll -> bodySize;
     newNode->body  = (void*)malloc(size);
     memcpy(newNode->body, body, size);
-    newNode -> key = key;
+    if (strlen(keyStr)!=0){
+        strcpy(newNode -> keyStr, keyStr);
+    }
+    else
+        newNode -> key = keyNum;
     newNode -> next = NULL;
     newNode -> prev = ll->tail; /*NULL if first*/
     if(ll -> head == NULL) /*if first node*/

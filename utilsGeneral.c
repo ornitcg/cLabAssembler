@@ -77,14 +77,13 @@ int isWhiteSpace(char c){
 
 int firstPosOfChar(char* string, char targetChar){
     int pos = 0;
-    if (strlen(string) == 0)
-        return -1;
+
     while (string[pos] != '\0'){
         if (string[pos] == targetChar)
             return pos;
         pos++;
     }
-    return -1;
+    return NOT_FOUND;
 }
 /*asuming input has no heading or tailing whitespaces*/
 int validAsNumber(char* string){
