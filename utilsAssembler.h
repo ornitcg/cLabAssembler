@@ -9,7 +9,6 @@ info parseSymbol(char* symbol , char* line, STATUS* stat);
 info parseData(char* line, info type, STATUS* stat);
 info parseNumbersData(line, &stat);
 info parseStringData(char* string, STATUS* stat);
-
 info  parseInstruction(char* instruction , char* line, STATUS* stat);
 /*
   Checks the possibility of the line to contain a label by searching for a ':'

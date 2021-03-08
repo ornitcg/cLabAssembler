@@ -13,9 +13,7 @@ void DO_SOMETHING(){
   /*for place holding*/
 }
 
-int detectedCommand(char* str){
-    return NO;
-}
+
 info parseExtern(line, &stat){
 
 }
@@ -29,7 +27,9 @@ info parseStringData(char* string, STATUS* stat){
             addData(stat -> dataTable, stat -> DC , line[0] ,'A');
             (stat -> DC)++;
         }
-        return String;
+        addData(stat -> dataTable, stat -> DC , '\0' ,'A');
+        (stat -> DC)++;
+        return String; /*emty string is acceptable*/
     }
     else{
         printf("line#%d: Error - Invalid string", stat -> lineNumber);
