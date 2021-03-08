@@ -20,9 +20,10 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> errorExists = NO;  /*errors flag*/
     stat -> symbolFound = NO;  /*symbols flag*/
     stat -> filename = fileName;
-    stat ->  symbolTable = linkedListInit(sizeof(SYMBOL));            /*starting a linked list of Symbols*/
-    stat ->  codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
-    stat ->  dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
+    stat -> commandNumber = -1;
+    stat -> symbolTable = linkedListInit(sizeof(SYMBOL));            /*starting a linked list of Symbols*/
+    stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
+    stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
 
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, attribute attr1, attribute attr2){

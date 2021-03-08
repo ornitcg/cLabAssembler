@@ -34,6 +34,7 @@ typedef struct  { /*to use as PSW*/
     info errorExists; /*YES/NO*/
     info symbolFound; /*YES/NO*/
     char* fileName;
+    int commandNumber;
     LinkedList* symbolTable;            /*starting a linked list*/
     LinkedList* codeTable;         /*starting a linked list*/
     LinkedList* dataTable;          /*starting a linked list*/

@@ -12,14 +12,39 @@
 void DO_SOMETHING(){
   /*for place holding*/
 }
-SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol)/*del*/
 
+
+info parseCommand(char* command, char* line, STATUS* stat ){
+    int cursor = 0;
+    int ind;
+    printf( "DEBUG in parseCommand for line: --%d--\n",stat-> lineNumber);
+    /*line is supposed to be clean of heading whitespaces at this point*/
+    cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first colon position*/
+    if ((strlen(line) == 0))
+        printf("line#%d: Error - Command expected", stat -> lineNumber);
+        return Error;
+    }
+    if (cursor == NOT_FOUND)
+        strcpy(command, line);
+    else strncpy(command, line, cursor);
+    ind = lookupCommand(command);
+    if (ind == NOT_FOUND){
+        printf("line#%d: Error - Invalid command", stat -> lineNumber);
+        return Error;
+    }
+    stat -> commandNumber = ind;
+    return Ok;
+}
+
+
+
+/*assuming attr2 is used only for extern and entry attributes*/
 info parseExtern(line, &stat){
     SYMBOL* symBody;
     symBody = lookupSymbol(stat->symbolTable , line);
     if (symBody == NULL) /*not Found in symbol table*/
         return Ok;
-    if (symBody -> attr1 == Extern || symBody -> attr2 == Extern) /*found in symbol table, checking the attributes*/
+    if (symBody -> attr2 == Extern ||symBody -> attr2 == Entry ) /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
         return Error;
     return No; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 }
@@ -167,7 +192,7 @@ info  parseInstruction(char* instruction , char* line, STATUS* stat){
     fprintf(stderr, "DEBUG in parseLabel for line: --%s--\n",line);
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first colon position*/
-    if ((strlen(line) == 0) || (cursor == -1)){
+    if ((strlen(line) == 0) || (cursor == NOT_FOUND)){
         instruction = EMPTY_STRING;
         return No;
     }
@@ -182,6 +207,7 @@ info  parseInstruction(char* instruction , char* line, STATUS* stat){
         instruction = EMPTY_STRING;
         return Error;
     }
+    instruction = EMPTY_STRING;
     return No;
 }
 
