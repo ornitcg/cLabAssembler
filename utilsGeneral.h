@@ -2,25 +2,28 @@
 #define _UTILS_GEN_
 
 #define SOMETHING 0;
-#define WHITE_SPACE " \t\n"
+#define WHITE_SPACE ' ' /*Don't worry I know there are other chars for whitespace , this is just for readability at firstPosrOfChar*/
 #define YES 1
 #define NO 0
 #define NOT_FOUND -1
+#define COMMA ','
+#define EMPTY_STRING ""
+#define QUOTE '"'
 /*
 Checks if the file name is valid and if it can be opened
 returns pointer to file if OK and NULL otherwise
 params:
 char* fileName : the name of the file to be tested if validFile
 */
-FILE* validFile(char* fileName);
+FILE* validFile(char* fileName, char* extention);
 /*
 Removes the last charachter in a given string
 params:
 char* string : a string to remove the last charachter from
 */
 void remLastChar(char* string);
-
-
+int firstPosOfChar(char* string, char targetChar);
+int validAsNumber(char* string);
 /*removes leading and trailing whitespaces from a string
 params: char* str -  the string to trim
 returns: the trimmed string

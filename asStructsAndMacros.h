@@ -1,6 +1,8 @@
-#include "linkedList.h"
 #ifndef _STRUCT_AND_MAC_
 #define _STRUCT_AND_MAC_
+
+#include "linkedList.h"
+#include "utilsGeneral.h"
 
 #define MAX_LINE 81
 #define MAX_LABEL 31
@@ -11,29 +13,22 @@
 #define INIT_ADDRESS 100
 #define COMMANDS_NUMBER 16
 #define LABEL_IDENTIFIER ':'
-#define COMMA ','
-
 #define COMMENT_IDENTIFIER_INT ';'
 #define COMMENT_IDENTIFIER ";"
 #define INSTRUCTION_IDENTIFIER '.'
 #define IMMEDIATE_IDENTIFIER "#"
 #define RELATIVE_IDENTIFIER "%"
-#define EMPTY_KEYSTR ""
-#define EMPTY_STR ""
-
-
 
 enum info {No, Yes, Ok, Code , Data, String,  Entry, Extern , Empty ,Error = -1};
 typedef enum info info;
 
-
-typedef struct  { /*to use as PSW*/
+typedef struct STATUS{ /*to use as PSW*/
     int IC;
     int DC;
-    int lineNumberInInput;
+    int lineNumber;
     info errorExists; /*YES/NO*/
     info symbolFound; /*YES/NO*/
-    char* fileName;
+    char fileName[FILENAME_MAX];
     int commandNumber;
     LinkedList* symbolTable;            /*starting a linked list*/
     LinkedList* codeTable;         /*starting a linked list*/
@@ -47,7 +42,7 @@ typedef struct SYMBOL {
     enum info attr1;
     enum info attr2; /*sometimes there maybe 2 attributes*/
 } SYMBOL;
-void addSymbol(LinkedList* symbolTable, short key, char* symbol, info attr1, info attr2);
+void addSymbol(LinkedList* symbolTable, short address, char* symbol, info attr1, info attr2);
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
@@ -55,7 +50,7 @@ typedef struct CODE_IMG {
     short code;
     char ARE;
 } CODE_IMG;
-void addCode(CODE_IMG* codeTable, short key, char* inputLine, short code, char ARE);
+void addCode(LinkedList* codeTable, short address, char* inputLine, short code, char ARE);
 
 /*********************************************DATA TABLE*******************************************************/
 typedef struct DATA_IMG {
@@ -63,7 +58,7 @@ typedef struct DATA_IMG {
     char ARE;
 } DATA_IMG;
 
-void addData(CODE_IMG* dataTable, short key, short data, char ARE);
+void addData(LinkedList* dataTable, short address, short code, char ARE);
 
 /*********************************************WORD STRUCTURE********************************************************/
 struct FIRST_WORD{
@@ -78,10 +73,10 @@ typedef struct FIRST_WORD FIRST_WORD;
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/
 #define SET_REG_ARR(x)  regArr x = {"r0","r1","r2", "r3","r4","r5","r6","r7"}
 
-typedef char reservedArr[7][MAX_LABEL] ; /*for array of registers names*/
+typedef char reservedArr[5][MAX_LABEL] ; /*for array of registers names*/
 #define SET_RESERVED_ARR(x)  reservedArr x = {"data", "string", "entry","extern", "NULL"};
 
-
+#define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}
 /*#define char otherReserved*/
 /*****************************************COMMAND (x) TABLE*********************************************/
 

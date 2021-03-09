@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "linkedList.h"
 
 /*Initializes the main info about the linked list*/
 LinkedList* linkedListInit(size_t bodySize){
@@ -21,7 +22,7 @@ void appendNode(short keyNum , char* keyStr , void* body , LinkedList* ll){
         strcpy(newNode -> keyStr, keyStr);
     }
     else
-        newNode -> key = keyNum;
+        newNode -> keyNum = keyNum;
     newNode -> next = NULL;
     newNode -> prev = ll->tail; /*NULL if first*/
     if(ll -> head == NULL) /*if first node*/

@@ -6,7 +6,6 @@
 #include <string.h>
 #include "utilsGeneral.h"
 
-#define EXT_AS ".as"
 
 /*
 Checks if the file name is valid and if it can be opened
@@ -14,7 +13,7 @@ returns pointer to file if OK and NULL otherwise
 params:
 char* fileName : the name of the file to be tested if validFile
 */
-FILE* validFile(char* fileName){
+FILE* validFile(char* fileName, char* extention){
     FILE* file = NULL;
     char* findExtention  = strchr(fileName,'.');
 
@@ -22,7 +21,7 @@ FILE* validFile(char* fileName){
       fprintf(stderr,"Error - in file name %s\n", fileName);
       return NULL;
     }
-    fileName = strcat(fileName,EXT_AS);
+    fileName = strcat(fileName,extention);
     file = fopen(fileName,"r");
     if (file == NULL)
       fprintf(stderr,"Error - cannot open the file %s\n", fileName);
@@ -77,9 +76,13 @@ int isWhiteSpace(char c){
 
 int firstPosOfChar(char* string, char targetChar){
     int pos = 0;
-
     while (string[pos] != '\0'){
-        if (string[pos] == targetChar)
+        if (targetChar == WHITE_SPACE){ /* WHITESPACE is used here for readability, the function
+        isWhiteSpace does the full check of whitespaces*/
+            if (isWhiteSpace(string[pos]))
+                return pos;
+        }
+        else if (string[pos] == targetChar) /*for other chaachters search*/
             return pos;
         pos++;
     }
@@ -93,7 +96,7 @@ int validAsNumber(char* string){
     if (string[0] == '-' || string[0]=='+')
         cursor++;
     while(string[cursor] != '\0'){
-        if ( sring[string[cursor] < 48 || string[cursor] > 57 )
+        if (string[cursor] < 48 || string[cursor] > 57 )
             return NO;
         cursor++;
     }

@@ -14,7 +14,7 @@ typedef struct LinkedList {
     Node* head;
     Node* tail;
     int len;
-    size_t body_size;
+    size_t bodySize;
 }LinkedList ;
 
 

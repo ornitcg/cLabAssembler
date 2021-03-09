@@ -1,13 +1,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "asStructsAndMacros.h"
+#include "utilsAssembler.h"
+#include "utilsGeneral.h"
 
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
     Node* cursor = symbolTable -> head;
     while (cursor != NULL) {
-        if ( strcmp(cursor.keyStr, symbol) == 0)
+        if ( strcmp(cursor -> keyStr, symbol) == 0)
             return cursor -> body;
-        cursor = cursor.next;
+        cursor = cursor -> next;
     }
     return NULL;
 }
@@ -19,14 +22,14 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> lineNumber = 1;      /*line number in code*/
     stat -> errorExists = NO;  /*errors flag*/
     stat -> symbolFound = NO;  /*symbols flag*/
-    stat -> filename = fileName;
+    strcpy(stat -> fileName , fileName);
     stat -> commandNumber = -1;
     stat -> symbolTable = linkedListInit(sizeof(SYMBOL));            /*starting a linked list of Symbols*/
     stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
 
-void addSymbol(LinkedList* symbolTable, short address, char* symbol, attribute attr1, attribute attr2){
+void addSymbol(LinkedList* symbolTable, short address, char* symbol, info attr1, info attr2){
     SYMBOL body;
     body.address = address;
     body.attr1 = attr1;
@@ -39,12 +42,12 @@ void addCode(LinkedList* codeTable, short address, char* inputLine, short code, 
     strcpy(body.inputLine, inputLine);
     body.code = code;
     body.ARE = ARE;
-    appendNode(address,EMPTY_KEYSTR , &body, codeTable);
+    appendNode(address, EMPTY_STRING , &body, codeTable);
 }
 
-void addData(LinkedList* dataTable, short address, short data, char ARE){
+void addData(LinkedList* dataTable, short address, short code, char ARE){
     CODE_IMG body;
-    body.data = code;
+    body.code = code;
     body.ARE = ARE;
-    appendNode(address, EMPTY_KEYSTR,  &body, dataTable);
+    appendNode(address, EMPTY_STRING,  &body, dataTable);
 }

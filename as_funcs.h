@@ -6,8 +6,8 @@
   params: FILE* inputFile - pointer to the input assembly file
   returns: 1 if errors occured and 0 otherwise
 */
-int firstPass(FILE* inputFile , STATUS** stat);
-void secondPass(FILE* inputFile, STATUS** stat);
+void firstPass(FILE* inputFile , STATUS* stat);
+void secondPass(FILE* inputFile, STATUS* stat);
 void runAssembler(FILE* inputFile, char* fileName);
 /*updates the data table so that every
 data symbol is given a shift at the size of ICF

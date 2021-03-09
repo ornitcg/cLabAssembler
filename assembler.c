@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   }
   for(i= 1 ; i < argc ; i++){
     fileName = argv[i];
-    inputFile = validFile(fileName);  /*input file contains a pointer to the opened file*/
+    inputFile = validFile(fileName, EXT_AS);  /*input file contains a pointer to the opened file*/
     if (inputFile != NULL) {
         fprintf(stderr, "******** DEBUG - starting runAssembler\n");
 

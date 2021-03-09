@@ -3,6 +3,7 @@
 */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "as_funcs.h"
 #include "linkedList.h"
 #include "utilsGeneral.h"
@@ -13,15 +14,20 @@ void DO_SOMETHING(){
   /*for place holding*/
 }
 
+info parseCommandOperands(char* line, STATUS* stat){
+
+    return Ok;
+}
+
 
 info parseCommand(char* command, char* line, STATUS* stat ){
-    int cursor = 0;
     int ind;
-    printf( "DEBUG in parseCommand for line: --%d--\n",stat-> lineNumber);
-    /*line is supposed to be clean of heading whitespaces at this point*/
-    cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first colon position*/
-    if ((strlen(line) == 0))
-        printf("line#%d: Error - Command expected", stat -> lineNumber);
+    /*at this point , line is supposed to be clean of heading whitespaces */
+    int cursor= firstPosOfChar(line, WHITE_SPACE);       /*find the first whitespace position*/
+
+    /*printf( "DEBUG in parseCommand for line: --%d--\n",stat-> lineNumber);*/
+    if (strlen(line) == 0){
+        printf("line#%d : Error - Command expected\n", stat -> lineNumber);
         return Error;
     }
     if (cursor == NOT_FOUND)
@@ -29,17 +35,17 @@ info parseCommand(char* command, char* line, STATUS* stat ){
     else strncpy(command, line, cursor);
     ind = lookupCommand(command);
     if (ind == NOT_FOUND){
-        printf("line#%d: Error - Invalid command", stat -> lineNumber);
+        printf("line#%d: Error - Invalid command\n", stat -> lineNumber);
         return Error;
     }
-    stat -> commandNumber = ind;
+    stat -> commandNumber = ind; /*adding the commandNumber to STATUS to make access easier*/
     return Ok;
 }
 
 
 
 /*assuming attr2 is used only for extern and entry attributes*/
-info parseExtern(line, &stat){
+info parseExtern(char* line, STATUS* stat){
     SYMBOL* symBody;
     symBody = lookupSymbol(stat->symbolTable , line);
     if (symBody == NULL) /*not Found in symbol table*/
@@ -51,30 +57,36 @@ info parseExtern(line, &stat){
 
 
 info parseStringData(char* string, STATUS* stat){
-    if(line[0] == '"' && line[strlen[line]]== '"'){
-        line[strlen[line]]= '\0';
-        line++;
-        while(line[0]!= '\0'){
-            addData(stat -> dataTable, stat -> DC , line[0] ,'A');
+    int strEndInd;
+    if (strlen(string) ==0){
+        printf("line#%d: Error - Missing string operand\n", stat -> lineNumber);
+        return Error;
+    }
+    strEndInd = strlen(string)-1;
+    if(string[0] == QUOTE && string[strEndInd]== QUOTE){
+        string[strEndInd]= '\0';
+        string++;
+        while(string[0]!= '\0'){
+            addData(stat -> dataTable, stat -> DC , string[0] ,'A');
             (stat -> DC)++;
+            string++;
         }
         addData(stat -> dataTable, stat -> DC , '\0' ,'A');
         (stat -> DC)++;
-        return String; /*emty string is acceptable*/
+        return String; /*reminder: String is of info type. empty string is acceptable*/
     }
-    else{
-        printf("line#%d: Error - Invalid string", stat -> lineNumber);
-        return Error;
-    }
+    printf("line#%d: Error - Invalid string\n", stat -> lineNumber);
+    return Error;
+
 }
 
-info parseNumbersData(line, &stat){
+info parseNumbersData(char* line, STATUS* stat){
     int cursor = 0;
     short data;
     char dataString[MAX_LINE];
     while (line[0] != '\0'){
         if (externalCommas(line)){
-            printf("line#%d: Error - Invalid commas", stat -> lineNumber);
+            printf("line#%d: Error - Invalid commas\n", stat -> lineNumber);
             return Error;
         }
         cursor =  firstPosOfChar(line, COMMA); /*find the first colon position returns -1 if no comma found*/
@@ -95,12 +107,12 @@ info parseNumbersData(line, &stat){
                 (stat -> DC)++;
             }
             else{
-                printf("line#%d: Error - Data out of range", stat->lineNumber);
+                printf("line#%d: Error - Data out of range\n", stat->lineNumber);
                 return Error;
             }
         }
         else{
-            printf("line#%d: Error - Invalid data", stat->lineNumber);
+            printf("line#%d: Error - Invalid data\n", stat->lineNumber);
             return Error;
         }
     }/*end while*/
@@ -110,21 +122,21 @@ info parseNumbersData(line, &stat){
 
 info parseData(char* line, info type, STATUS* stat){
     if (strlen(line) == 0 ){
-        printf("line#%d: Error - Missing data");
+        printf("line#%d: Error - Missing data\n", stat -> lineNumber);
         return Error;
     }
     if (type == String)
-        return parseStringData(line, &stat);
+        return parseStringData(line, stat);
     else
-        return parseNumbersData(line, &stat);
+        return parseNumbersData(line, stat);
 }
 
 /* returns Yes/No/Error*/
 info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
     char tmpSymbol[MAX_LINE];
-    info ans;
-    printf( "DEBUG in parseLabel for line: --%s--\n",line);
+    info valid;
+    /*printf( "DEBUG in parseLabel for line: --%s--\n",line);*/
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND)){
@@ -132,29 +144,29 @@ info parseSymbol(char* symbol , char* line, STATUS* stat){
     }
     strncpy(tmpSymbol, line, cursor ); /*get the string part until the colon sign*/
     tmpSymbol[cursor] = '\0';
-    ans = validAsSymbol(tmpSymbol);
-    if (lookupSymbol(stat-> symbolTable, tmpSymbol) == Yes){
-        printf("line# %d: Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
+    valid = validAsSymbol(tmpSymbol, stat);
+    if (lookupSymbol(stat-> symbolTable, tmpSymbol) != NULL){
+        printf("line# %d: Error - Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
         return Error;
     }
     if (valid == Yes){
         strncpy(symbol, line, cursor ); /*get the string part until the colon sign*/
         return Yes ;
     }
-    return ans;
+    return valid;
 }
 
-info validAsSymbol(char* string){
+info validAsSymbol(char* string, STATUS* stat){
     if (strlen(string) > MAX_LABEL){
-        printf("line# %d: Label is too long: %s  \n",  stat -> lineNumber,symbol);
+        printf("line# %d: Error - Label is too long: %s  \n",  stat -> lineNumber,string);
         return Error;
     }
-    if (!validSymbolChars(symbol)){
-        printf("line# %d: Invalid charachters in label %s \n",  stat -> lineNumber, symbol);
+    if (!validSymbolChars(string)){
+        printf("line# %d: Error - Invalid charachters in label %s \n",  stat -> lineNumber, string);
         return Error;
     }
     if (isReservedWord(string) == Yes){
-        printf("line# %d: Label %s must't be a reserved word \n",  stat -> lineNumber, symbol);
+        printf("line# %d: Error - Used reserved word for label \n",  stat -> lineNumber);
         return Error;
     }
     return Yes;
@@ -162,6 +174,7 @@ info validAsSymbol(char* string){
 
 info isReservedWord(char* string){
     SET_RESERVED_ARR(resv);
+    /*printf("reserved word %s\n", resv[4]) ;*/
 
         return Yes;
     return No;
@@ -189,7 +202,7 @@ int lookupCommand(char* string){
 /*need to add the line numbers*/
 info  parseInstruction(char* instruction , char* line, STATUS* stat){
     int cursor = 0;
-    fprintf(stderr, "DEBUG in parseLabel for line: --%s--\n",line);
+    /*fprintf(stderr, "DEBUG in parseLabel for line: --%s--\n",line);*/
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND)){
@@ -203,7 +216,7 @@ info  parseInstruction(char* instruction , char* line, STATUS* stat){
         if (strcmp(instruction, ".string") == 0) return String;
         if (strcmp(instruction, ".extern") == 0) return Extern;
         if (strcmp(instruction, ".entry") == 0) return Entry;
-        printf("line#%d: Invalid instruction name", stat->lineNumber);
+        printf("line#%d: Error - Invalid instruction name\n", stat->lineNumber);
         instruction = EMPTY_STRING;
         return Error;
     }
@@ -236,7 +249,7 @@ int validSymbolChars(char* symbol){ /*OK*/
   returns:   1 if found, and 0 otherwise
 */
 int containsLabelDef(char* line){
-  if (strchr(line, LABEL_IDENTIFIER_INT)!= NULL)
+  if (strchr(line, LABEL_IDENTIFIER)!= NULL)
     return YES;
   return NO;
 }
