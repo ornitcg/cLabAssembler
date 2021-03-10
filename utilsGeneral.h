@@ -22,13 +22,16 @@ params:
 char* string : a string to remove the last charachter from
 */
 void remLastChar(char* string);
+void emptyString(char* string);
+
 int firstPosOfChar(char* string, char targetChar);
-int validAsNumber(char* string);
+int isValidAsNumber(char* string);
 /*removes leading and trailing whitespaces from a string
 params: char* str -  the string to trim
 returns: the trimmed string
 */
-char* trimWhiteSpaces(char* str);
+char* trimWhiteSpaces(char* string);
+/*void trimWhiteSpaces(char* string);*/
 
 /*
 Checks if a charachter is a space or tab

@@ -15,25 +15,130 @@ void DO_SOMETHING(){
 }
 
 info parseCommandOperands(char* line, STATUS* stat){
+    int cmdIndex = stat -> commandNumber;
+    int opNum, strLength = strlen(line);
+    char* op1 , op2;
+    int pos = firstPosOfChar(COMMA);
+    FIRST_WORD w;
+    SET_COMMAND_TABLE(cmd);
+    opNum = cmd[cmdIndex].operands;
+    if (strLength == 0 && opNum == 0)
+        res = buildFirstWord(cmd[opNum].opcode, cmd[opNum].funct, 0, 0);
+        addData(stat -> dataTable, (stat -> IC)++ , res, 'A');
+        return Ok;
+    if (strLength == 0 && opNum > 0){
+        printf("line#%d : Error - Operand(s) missing\n", stat -> lineNumber);
+        return Error;
+    }
+    if(line[0] == COMMA || line[strLength-1] == COMMA){
+        printf("line#%d : Error - leading/tailing comma is not allowed\n", stat -> lineNumber);
+        return Error;
+    }
+    if ((opNum == 0 && strLength > 0) || (opNum == 1 && pos > 0)){
+        printf("line#%d : Error - Too many operand\n", stat -> lineNumber);
+        return Error;
+    }
+    if (opNum == 1 && strLength > 0 && pos == NOT_FOUND){
+        op1 = line;
+        if (isValidOperand(stat, op1))
+        res = buildFirstWord(cmd[opNum].opcode, cmd[opNum].funct, 0, something);
+        addData(stat -> dataTable, (stat -> IC)++ , res, 'A');
+        return Ok;
+    }
+
+    fprintf(stderr, "DEBUG in parseOperands , commandNumber %d operators: %d line: --|%s|--\n",cmdIndex,opNum , line);
 
     return Ok;
 }
 
+Addressing isValidOperand(char* operand, STATUS* stat){
+    SYMBOL* sym;
+    if (operand[0] == IMMEDIATE_IDENTIFIER){
+        operand++;
+        if (isValidAsNumber(operand))
+            return Immediate;
+        printf("line#%d : Error - Operand is invalid as Immediate\n", stat -> lineNumber);
+        return Error;
+    }
+    else if (operand[0] == RELATIVE_IDENTIFIER){
+        operand++;
+        if (isValidAsSymbol(operand)){
+            sym = lookupSymbol(stat -> symbolTable, operand);
+            if (sym!= NULL && (sym -> attr2)== Extern){
+                    printf("line#%d : Error - Extern Label cannot be used in relative addressing\n", stat -> lineNumber);
+                    return Error;
+            }
+            else  return Relative;
+        }
+        printf("line#%d : Error - Operand is an invalid symbol\n", stat -> lineNumber);
+        return Error;
+    }
+    else if (lookupRegister(operand) != NOT_FOUND))
+        return Register;
+    if (isValidAsSymbol(operand))
+            return Direct;
+    else  printf("line#%d : Error - Operand is an invalid symbol\n", stat -> lineNumber);
+    return Error;
+}
+
+info isValidAddressing(char* operand, int opNumber, STATUS* stat){
+    SET_COMMAND_TABLE(cmd);
+    short opAdrs;
+    int cmdIndex = stat -> commandNumber;
+    int opNum, strLength = strlen(line);
+    Addressing addressing =  AddressType(char* operand, STATUS* stat);
+
+    if (addressing == NULL)
+        return Error;
+    opAdrs = (short)addressing;
+    if (cmdIndex.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+/*
+Builds the first word from the four fields of the parameter struct
+params: FIRST_WORD type of struct that contains 4 fields
+returns: a short int output composed of the 4 fields with the right shifting
+assuming the input is correct
+*/
+short int buildFirstWord(short opcode, short funct, short src, short dest){
+  short int res;
+  src = src << 2;
+  funct = funct << 4;
+  opcode = opcode << 8 ;
+  res =  dest | src | funct | opcode ;
+  return res;
+}
 
 info parseCommand(char* command, char* line, STATUS* stat ){
     int ind;
-    /*at this point , line is supposed to be clean of heading whitespaces */
+    /* At this point , line is clean of heading whitespaces */
     int cursor= firstPosOfChar(line, WHITE_SPACE);       /*find the first whitespace position*/
 
-    /*printf( "DEBUG in parseCommand for line: --%d--\n",stat-> lineNumber);*/
     if (strlen(line) == 0){
         printf("line#%d : Error - Command expected\n", stat -> lineNumber);
         return Error;
     }
     if (cursor == NOT_FOUND)
-        strcpy(command, line);
-    else strncpy(command, line, cursor);
+        strcpy(command, line); /* some commands dont require operands so this case may be ok*/
+    else {
+        strncpy(command, line, cursor);
+        command[cursor] = '\0';
+    }
     ind = lookupCommand(command);
+    fprintf(stderr, "DEBUG - in parsecommand: index found %d for command %s\n",ind, command);
     if (ind == NOT_FOUND){
         printf("line#%d: Error - Invalid command\n", stat -> lineNumber);
         return Error;
@@ -100,7 +205,7 @@ info parseNumbersData(char* line, STATUS* stat){
                 line[0] = '\0';
             }
         /*now we have a dataString that is supposed to be a data item*/
-        if (validAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
+        if (isValidAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
             data = atoi(dataString); /*invert string to number*/
             if (validInWordRange(data) == YES){
                 addData(stat -> dataTable ,stat -> DC , data, 'A'); /*add data to data image*/
@@ -131,32 +236,33 @@ info parseData(char* line, info type, STATUS* stat){
         return parseNumbersData(line, stat);
 }
 
+
 /* returns Yes/No/Error*/
 info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
     char tmpSymbol[MAX_LINE];
     info valid;
-    /*printf( "DEBUG in parseLabel for line: --%s--\n",line);*/
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
-    if ((strlen(line) == 0) || (cursor == NOT_FOUND)){
+    if ((strlen(line) == 0) || (cursor == NOT_FOUND))
         return No;
-    }
+
     strncpy(tmpSymbol, line, cursor ); /*get the string part until the colon sign*/
     tmpSymbol[cursor] = '\0';
-    valid = validAsSymbol(tmpSymbol, stat);
+
+    valid = isValidAsSymbol(tmpSymbol, stat);
     if (lookupSymbol(stat-> symbolTable, tmpSymbol) != NULL){
         printf("line# %d: Error - Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
         return Error;
     }
     if (valid == Yes){
-        strncpy(symbol, line, cursor ); /*get the string part until the colon sign*/
+        strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
         return Yes ;
     }
     return valid;
 }
 
-info validAsSymbol(char* string, STATUS* stat){
+info isValidAsSymbol(char* string, STATUS* stat){
     if (strlen(string) > MAX_LABEL){
         printf("line# %d: Error - Label is too long: %s  \n",  stat -> lineNumber,string);
         return Error;
@@ -173,10 +279,14 @@ info validAsSymbol(char* string, STATUS* stat){
 }
 
 info isReservedWord(char* string){
+    int i=0;
     SET_RESERVED_ARR(resv);
     /*printf("reserved word %s\n", resv[4]) ;*/
-
-        return Yes;
+    while ( strcmp(resv[i], "NULL") != 0 ){ /*end of reserved words list*/
+        if (strcmp( resv[i], string) == 0)  /*casefound use of reserved word*/
+            return Yes;
+        i++;
+    }
     return No;
 }
 
@@ -264,19 +374,4 @@ int toIgnore(char* line){
     if (strlen(line) == 0 || line[0] == COMMENT_IDENTIFIER_INT)
         return YES;
     return NO;
-}
-
-/*
-Builds the first worb from the four fields of the parameter struct
-params: FIRST_WORD type of struct that contains 4 fields
-returns: a short int output composed of the 4 fields with the right shifting
-assuming the input is correct
-*/
-short int buildFirstWord(FIRST_WORD w){
-  short int res;
-  w.src = w.src << 2;
-  w.funct = w.funct << 4;
-  w.opcode = w.opcode << 8 ;
-  res =  w.dest | w.src |w.funct | w.opcode ;
-  return res;
 }

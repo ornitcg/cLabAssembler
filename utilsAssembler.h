@@ -7,7 +7,6 @@
 /*
   Group of helper functions that are related to assembler
 */
-
 void DO_SOMETHING();
 info parseSymbol(char* symbol , char* line, STATUS* stat);
 info parseData(char* line, info type, STATUS* stat);
@@ -23,16 +22,16 @@ info parseCommandOperands(char* line, STATUS* stat);
   returns:   1 if found, and 0 otherwise
 */
 int containsLabelDef(char* line);
-int validSymbolChars(char* symbol); /*OK*/
-int validInWordRange(short num);
+
 int lookupCommand(char* string);
 int lookupRegister(char* string);
 info isReservedWord(char* string);
-info validAsSymbol(char* string, STATUS* stat);
-
-
+info isValidAsSymbol(char* string, STATUS* stat);
+int validSymbolChars(char* symbol); /*OK*/
+int validInWordRange(short num);
+Addressing isValidOperand(char* operand, STATUS* stat);
 char* parseNext(char* line, char* delimiter);
 int toIgnore(char* line);
 int detectedCommand(char* str);
-
+short int buildFirstWord(short opcode, short funct, short src, short dest);
 #endif

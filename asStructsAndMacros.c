@@ -51,3 +51,13 @@ void addData(LinkedList* dataTable, short address, short code, char ARE){
     body.ARE = ARE;
     appendNode(address, EMPTY_STRING,  &body, dataTable);
 }
+
+
+/*short int buildFirstWord(FIRST_WORD* w){
+  short int res;
+  w -> src = (w -> src) << 2;
+  w -> funct = (w -> funct) << 4;
+  w -> opcode = (w -> opcode) << 8 ;
+  res =  (w -> dest) | (w -> src) | (w -> funct) | (w -> opcode) ;
+  return res;
+}*/
