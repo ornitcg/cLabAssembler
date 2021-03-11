@@ -19,9 +19,10 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     int ind;
     /* At this point , line is clean of heading whitespaces */
     int cursor= firstPosOfChar(line, WHITE_SPACE);       /*find the first whitespace position*/
-
+    command = EMPTY_STRING;
     if (strlen(line) == 0){
         printf("line#%d : Error - Command expected\n", stat -> lineNumber);
+        stat -> errorExists = Yes;
         return Error;
     }
     if (cursor == NOT_FOUND)
@@ -34,6 +35,7 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     fprintf(stderr, "DEBUG - in parsecommand: index found %d for command %s\n",ind, command);
     if (ind == NOT_FOUND){
         printf("line#%d: Error - Invalid command\n", stat -> lineNumber);
+        stat -> errorExists = Yes;
         return Error;
     }
     stat -> commandNumber = ind; /*adding the commandNumber to STATUS to make access easier*/
@@ -43,7 +45,7 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
 /* Searches through line for valid command getOperands
 returns 'Error' if input not valid
 and 'Ok' if found valid */
-Info parseCommandOperands(char* line, STATUS* stat){
+void parseCommandOperands(char* line, STATUS* stat){
     int opNumFound , opNumAllowed, cmdIndex = stat -> commandNumber;
     char* opSrc = (char*)malloc(sizeof(line));
     char* opTarget = (char*)malloc(sizeof(line));
@@ -87,10 +89,11 @@ Info parseCommandOperands(char* line, STATUS* stat){
                 }
         }
     }
+    else stat -> errorExists = Yes;
+
     free(opSrc);
     free(opTarget);
     fprintf(stderr, "DEBUG in parseOperands , commandNumber %d operators: %d line: --|%s|--\n",cmdIndex, opNumAllowed , line);
-    return errorStatus;
 }
 
 void addFirstWord(int opNum, char* opSrc, char* opTarget, STATUS* stat){

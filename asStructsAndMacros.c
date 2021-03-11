@@ -26,9 +26,11 @@ SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
 void initStatus(STATUS* stat, char* fileName){
     stat -> IC = INIT_ADDRESS;    /*instructions counter*/
     stat -> DC = 0;      /*data counter*/
+    stat -> ICF = 0;    /*instructions counter*/
+    stat -> DCF = 0;
     stat -> lineNumber = 1;      /*line number in code*/
-    stat -> errorExists = NO;  /*errors flag*/
-    stat -> symbolFound = NO;  /*symbols flag*/
+    stat -> errorExists = No;  /*errors flag*/
+    stat -> symbolFound = No;  /*symbols flag*/
     strcpy(stat -> fileName , fileName);
     strcpy(stat -> label , EMPTY_STRING);
     stat -> commandNumber = -1;
@@ -38,6 +40,17 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
+
+void resetStatStructForLine(STATUS* stat){
+    stat -> lineNumber ++;
+    stat -> symbolFound = No;
+    strcpy(stat -> label , EMPTY_STRING);
+    stat -> commandNumber = -1;
+    stat -> srcOpAddressType = Empty;
+    stat -> targetOpAddressType = Empty;
+}
+
+
 
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2){
     SYMBOL body;

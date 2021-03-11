@@ -22,8 +22,10 @@
 
 
 typedef struct STATUS{
-    int IC;
-    int DC;
+    unsigned int IC;
+    unsigned int DC;
+    unsigned int ICF;
+    unsigned int DCF;
     int lineNumber;
     Info errorExists; /*YES/NO*/
     Info symbolFound; /*YES/NO*/
@@ -38,12 +40,14 @@ typedef struct STATUS{
 } STATUS;
 
 void initStatus(STATUS* stat, char* fileName);
+void resetStatStructForLine(STATUS* stat);
 /**************************************************SYMBOL TABLE*****************************************/
 typedef struct SYMBOL {
     short address;
     enum Info attr1;
     enum Info attr2; /*sometimes there maybe 2 attributes*/
 } SYMBOL;
+
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2);
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 
@@ -54,6 +58,7 @@ typedef struct CODE_IMG {
     short code;
     Info ARE;
 } CODE_IMG;
+
 void addCode(LinkedList* codeTable, short address, Info comment,char* label, short code, Info ARE); /*address serves as linkedlist key*/
 
 /*********************************************DATA TABLE*******************************************************/

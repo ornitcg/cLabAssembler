@@ -59,9 +59,10 @@ Info isReservedWord(char* string){
 short wordValueOfNoneLabelOperand(char* operand, Info addressType){
     short word;
     if (addressType == Immediate)
-        return (short)atoi(++operand);
+        word =  (short)atoi(++operand);
     if (addressType == Register)
-        return (short)lookupRegister(operand);
+        word = (short)lookupRegister(operand);
+    return word;
 }
 
 int validInWordRange(short num){

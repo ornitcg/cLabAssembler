@@ -8,7 +8,7 @@ Info parseCommand(char* command, char* line, STATUS* stat );
 /* Searches through line for valid command getOperands
 returns 'Error' if input not valid
 and 'Ok' if found valid */
-Info parseCommandOperands(char* line, STATUS* stat);
+void parseCommandOperands(char* line, STATUS* stat);
 int getOperands(char* line,char* opSrc,char* opTarget);
 Info operandAddressType(char* operand, STATUS* stat);
 Info isValidAddressing(char* operand, Info opNumber, STATUS* stat);

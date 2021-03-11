@@ -11,14 +11,14 @@
 
 Info  parseInstruction(char* instruction , char* line, STATUS* stat){
     int cursor = 0;
+    instruction = EMPTY_STRING;
     /*fprintf(stderr, "DEBUG in parseLabel for line: --%s--\n",line);*/
     /*line is supposed to be clean of heading whitespaces at this point*/
-    cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first colon position*/
-    if ((strlen(line) == 0) || (cursor == NOT_FOUND)){
-        instruction = EMPTY_STRING;
+    cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first whitespace position*/
+    if ((strlen(line) == 0) || (cursor == NOT_FOUND))
         return No;
-    }
-    strncpy(instruction, line, cursor ); /*get the string part until the colon sign*/
+
+    strncpy(instruction, line, cursor ); /*get the string part until the whitespace into instruction*/
     instruction[cursor] = '\0';
     if (instruction[0] == INSTRUCTION_IDENTIFIER){
         if (strcmp(instruction, ".data") == 0) return Data;
@@ -26,30 +26,33 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
         if (strcmp(instruction, ".extern") == 0) return Extern;
         if (strcmp(instruction, ".entry") == 0) return Entry;
         printf("line#%d: Error - Invalid instruction name\n", stat->lineNumber);
+        stat -> errorExists = Yes;
         instruction = EMPTY_STRING;
         return Error;
     }
-    instruction = EMPTY_STRING;
+    /*if ther is no INSTRUCTION_IDENTIFIER, it can be a command so it's not necesarily an error*/
     return No;
 }
 
 
 
-Info parseData(char* line, Info type, STATUS* stat){
+void parseData(char* line, Info type, STATUS* stat){
     if (strlen(line) == 0 ){
         printf("line#%d: Error - Missing data\n", stat -> lineNumber);
-        return Error;
+        stat -> errorExists = Yes;
+        return;
     }
     if (type == String)
-        return parseStringData(line, stat);
+        parseStringData(line, stat);
     else
-        return parseNumbersData(line, stat);
+        parseNumbersData(line, stat);
 }
 
 Info parseStringData(char* string, STATUS* stat){
     int strEndInd;
     if (strlen(string) ==0){
         printf("line#%d: Error - Missing string operand\n", stat -> lineNumber);
+        stat -> errorExists = Yes;
         return Error;
     }
     strEndInd = strlen(string)-1;
@@ -66,10 +69,24 @@ Info parseStringData(char* string, STATUS* stat){
         return String; /*reminder: String is of info type. empty string is acceptable*/
     }
     printf("line#%d: Error - Invalid string\n", stat -> lineNumber);
+    stat -> errorExists = Yes;
     return Error;
 
 }
 
+
+/*assuming attr2 is used only for extern and entry attributes*/
+Info parseExtern(char* line, STATUS* stat){
+    SYMBOL* symBody;
+    symBody = lookupSymbol(stat->symbolTable , line);
+    if (symBody == NULL) /*not Found in symbol table*/
+        return Ok;
+    if (symBody -> attr2 == Extern ||symBody -> attr2 == Entry ){ /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
+        stat -> errorExists = Yes;
+        return Error;
+    }
+    return No; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
+}
 
 Info parseNumbersData(char* line, STATUS* stat){
     int cursor = 0;
@@ -99,25 +116,15 @@ Info parseNumbersData(char* line, STATUS* stat){
             }
             else{
                 printf("line#%d: Error - Data out of range\n", stat->lineNumber);
+                stat -> errorExists = Yes;
                 return Error;
             }
         }
         else{
             printf("line#%d: Error - Invalid data\n", stat->lineNumber);
+            stat -> errorExists = Yes;
             return Error;
         }
     }/*end while*/
     return Data;
-}
-
-
-/*assuming attr2 is used only for extern and entry attributes*/
-Info parseExtern(char* line, STATUS* stat){
-    SYMBOL* symBody;
-    symBody = lookupSymbol(stat->symbolTable , line);
-    if (symBody == NULL) /*not Found in symbol table*/
-        return Ok;
-    if (symBody -> attr2 == Extern ||symBody -> attr2 == Entry ) /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
-        return Error;
-    return No; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 }

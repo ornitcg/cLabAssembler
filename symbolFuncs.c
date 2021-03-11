@@ -24,6 +24,7 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
     char tmpSymbol[MAX_LINE];
     Info valid;
+    symbol = EMPTY_STRING;
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND))
@@ -35,9 +36,10 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
     valid = isValidAsSymbol(tmpSymbol, stat);
     if (lookupSymbol(stat-> symbolTable, tmpSymbol) != NULL){
         printf("line# %d: Error - Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
+        stat -> errorExists = Yes;
         return Error;
     }
-    if (valid == Yes){
+    else if (valid == Yes){
         strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
         return Yes ;
     }
