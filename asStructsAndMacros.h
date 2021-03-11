@@ -28,8 +28,10 @@ typedef struct STATUS{
     Info errorExists; /*YES/NO*/
     Info symbolFound; /*YES/NO*/
     char fileName[FILENAME_MAX];
+    char label[MAX_LABEL];
     int commandNumber;
-    Info addressType;
+    Info srcOpAddressType;
+    Info targetOpAddressType;
     LinkedList* symbolTable;            /*starting a linked list*/
     LinkedList* codeTable;         /*starting a linked list*/
     LinkedList* dataTable;          /*starting a linked list*/

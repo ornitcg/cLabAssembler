@@ -47,68 +47,84 @@ Info parseCommandOperands(char* line, STATUS* stat){
     int opNumFound , opNumAllowed, cmdIndex = stat -> commandNumber;
     char* opSrc = (char*)malloc(sizeof(line));
     char* opTarget = (char*)malloc(sizeof(line));
-    short firstWord, opWord;
-    Info opType ,opRes , comment = Ok; /*instead of addressing*/
+    Info errorStatus = Ok; /*instead of addressing*/
     SET_COMMAND_TABLE(cmd);
-
     opNumAllowed = cmd[cmdIndex].operands;          /*for readability*/
+
+    /*Searching for operands blindly, Errors are checked later*/
     opNumFound = getOperands(line, opSrc, opTarget); /*operands will be empty if not found*/
+    stat -> srcOpAddressType = operandAddressType(opSrc , stat);
+    stat -> targetOpAddressType = operandAddressType(opTarget , stat);
 
-    /* Lets look at the bright side first... and then at errors. it helps with freeing allocated memory on time*/
-    if (opNumFound == 0 && opNumAllowed == 0){ /*no operand expected, and 0 received*/
-        firstWord = buildFirstWord(cmd[opNumFound].opcode, cmd[opNumAllowed].funct, 0, 0);
-        addCode(stat -> dataTable, (stat -> IC)++ , firstWord, A);
-    }
-    else if( opNumFound == opNumAllowed){
-            if (opNumAllowed == 1)
-                addOperand(opTarget, Target , stat);
-            else { /*2 allowed*/
-                addOperand(opSrc, Source , stat);
-                addOperand(opTarget, Target , stat);
-            }
-        }
-    free(opSrc);
-    free(opTarget);
-
-    /* Look at some general errors: */
     if(externalCommas(line)){ /*comma before first operand or after last operand are not allowed*/
         printf("line#%d : Error - leading/tailing comma are not allowed\n", stat -> lineNumber);
         /*Allowed By Judy Issacs to generalize the type of Error*/
-        return Error;
+        errorStatus = Error;
     }
     /*less operand than expected (assuming that if missing comma the whole string is received as one operand (most likely with spaces but I chose to look at it as a missing operand error))*/
     if ((opNumFound < opNumAllowed )){
         printf("line#%d : Error - missing Operand(s) \n", stat -> lineNumber);
-        return Error;
+        errorStatus = Error;
     }
     /*got more operands than expected*/
     if ((opNumAllowed  < opNumFound)){
         printf("line#%d : Error - Too many operands\n", stat -> lineNumber);
         /*Allowed By Judy to generalize the type of Error*/
-        return Error;
+        errorStatus = Error;
     }
+    if (stat -> srcOpAddressType == Error || stat -> srcOpAddressType == Error)
+        errorStatus = Error;
+
+    if (errorStatus == Ok ){
+        /*if (opNumFound == 0 && opNumAllowed == 0)*/ /*no operand expected, and 0 received*/
+        addFirstWord(opNumFound, opSrc, opTarget, stat);
+        if(opNumFound > 0 && opNumFound == opNumAllowed){
+                if (opNumAllowed == 1)
+                    addOperandWord(opTarget, Target, stat);
+                else { /*2 allowed*/
+                    addOperandWord(opSrc, Source , stat);
+                    addOperandWord(opTarget, Target , stat);
+                }
+        }
+    }
+    free(opSrc);
+    free(opTarget);
     fprintf(stderr, "DEBUG in parseOperands , commandNumber %d operators: %d line: --|%s|--\n",cmdIndex, opNumAllowed , line);
+    return errorStatus;
 }
 
+void addFirstWord(int opNum, char* opSrc, char* opTarget, STATUS* stat){
+    int cmdIndex =  stat -> commandNumber;
+    Info comment = Ok;
+    short firstWord;
+    char* label = stat-> label;
+    SET_COMMAND_TABLE(cmd);
 
-Void addOperand(char* opTarget, Info addressType, STATUS* stat){
-    if ( isValidAddressing(opTarget, addressType , stat)  == Yes){ /*stat here is updated with the addressType of the checked operand*/
-        if (stat-> addressType == Relative || stat->addressType == Direct )
-            addCode(stat -> dataTable, (stat -> IC)++ , FillLater , 0 , FillLater);
-        else if (stat->addressType == Immediate || stat->addressType == Register ){
-            opWord = wordValueOfOperand(opTarget, stat -> addressType);
-            addCode(stat -> dataTable, (stat -> IC)++ , Empty , opWord , A);
+    if (opNum == 0)
+        firstWord = buildFirstWord(cmd[cmdIndex].opcode, cmd[cmdIndex].funct, 0, 0);
+    else if (opNum == 1)
+        firstWord = buildFirstWord(cmd[cmdIndex].opcode, cmd[cmdIndex].funct, 0, stat->targetOpAddressType);
+    else firstWord = buildFirstWord(cmd[cmdIndex].opcode, cmd[cmdIndex].funct, stat->srcOpAddressType, stat->targetOpAddressType);
+    addCode(stat -> dataTable, (stat -> IC)++ , comment, label , firstWord , A);
+}
+
+void addOperandWord(char* operand, Info opType, STATUS* stat){
+    Info addressType;
+    short opWord;
+    if ( isValidAddressing(operand, opType,  stat)  == Yes){ /*stat here is updated with the addressType of the checked operand*/
+        if (opType == Source)
+            addressType = (stat -> srcOpAddressType);
+        else if (opType == Target)
+            addressType = (stat -> targetOpAddressType);
+
+        if ( addressType == Relative ||  addressType == Direct ) /*operand contains label*/
+            addCode(stat -> dataTable, (stat -> IC)++ , FillLater , operand , 0 , FillLater);
+        else if (addressType == Immediate || addressType == Register ){
+            opWord = wordValueOfNoneLabelOperand(operand ,  addressType);
+            addCode(stat -> dataTable, (stat -> IC)++ , Empty , EMPTY_STRING , opWord , A);
         /*if  stat -> addressType = Error nothing is added*/
         }
     }
-}
-
-short wordValueOfOperand(char* operand, Info addressType){
-    short word;
-    if (addressType == Immediate)
-        return (short)atoi(++operand);
-    if (addressType == Register)
-        return (short)lookupRegister(operand);
 }
 
 
@@ -129,6 +145,7 @@ int getOperands(char* line,char* opSrc,char* opTarget){
         strcpy(opTarget,line);
         return 1;
     }
+
     else { /*more than one operand expected*/
         strncpy(opSrc,line,posComma);   /*insert first operand into opSrc*/
         line += (posComma+1);           /*cut the operand away from line, ***including the comma****/
@@ -155,19 +172,23 @@ Returns Yes if valid, and Error if not */
 Info isValidAddressing(char* operand, Info opType, STATUS* stat){
     int cmdIndex = stat -> commandNumber;
     int res, opNumAllowed ;
-    Info opAddress = operandAddressType(operand, stat);
-    stat -> addressType = opAddress;
+    Info addressType ;
     SET_COMMAND_TABLE(cmd);
     opNumAllowed = cmd[cmdIndex].operands;
 
-    if (opAddress == Error) /*Address enum data type, no addressing type was detected, */
+    if (opType == Source)
+        addressType = (stat -> srcOpAddressType);
+    else if (opType == Target)
+        addressType = (stat -> targetOpAddressType);
+
+    if (addressType == Error) /*Address enum data type, no addressing type was detected, */
         return Error; /*Info enum data type*/
 
     /*now check if op type is allowed for use at this location in command*/
     if (opNumAllowed == 1 || opType == Target)
-        res = firstPosOfChar(cmd[cmdIndex].opTarget, opAddress);
+        res = firstPosOfChar(cmd[cmdIndex].opTarget, addressType); /*addressType represents the charachters 0/1/2/3 */
     else if (opType == Source)
-        res = firstPosOfChar(cmd[cmdIndex].opSrc, opAddress);
+        res = firstPosOfChar(cmd[cmdIndex].opSrc, addressType);
     if (res == NOT_FOUND){
         printf("line#%d : Error - Invalid adressing type op operand\n", stat -> lineNumber);
         return Error;
@@ -182,6 +203,9 @@ returns 'Error' if operand is not one of any type
 if not Error, the value of the operand as a word, is returned via opWord parameter*/
 Info operandAddressType(char* operand,  STATUS* stat){
     SYMBOL* sym;
+    if(strlen(operand) == 0)
+        return Empty;
+
     if (lookupRegister(operand) != NOT_FOUND) /*check id operand is Register*/
         return Register;
 

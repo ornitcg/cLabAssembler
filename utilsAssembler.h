@@ -10,14 +10,11 @@ enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative =
 typedef enum Info Info;
 
 
-/*enum Addressing {Immediate = '0', Direct ='1', Relative ='2' , Register ='3' , Null = 'E'};
-typedef enum Addressing Addressing;*/
-
 /*
   Group of helper functions that are related to assembler
 */
 void DO_SOMETHING();
-short wordValueOfOperand();
+short wordValueOfNoneLabelOperand();
 
 int lookupRegister(char* string);
 Info isReservedWord(char* string);
