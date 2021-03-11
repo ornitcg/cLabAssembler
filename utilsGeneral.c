@@ -103,6 +103,7 @@ int firstPosOfChar(char* string, char targetChar){
     }
     return NOT_FOUND;
 }
+
 void emptyString(char* string){
     string[0] = '\0';
 }

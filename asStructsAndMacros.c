@@ -1,9 +1,16 @@
+/* Group of functions that deal with assembler data structures as init, add and lookup */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "asStructsAndMacros.h"
 #include "utilsAssembler.h"
 #include "utilsGeneral.h"
+
+
+/* searches through the symbol table for a given label (symbol)
+if the labels is found, its other attributes are returnded with pointer
+otherwise , returns NULL*/
 
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
     Node* cursor = symbolTable -> head;
@@ -29,7 +36,7 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
 
-void addSymbol(LinkedList* symbolTable, short address, char* symbol, info attr1, info attr2){
+void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2){
     SYMBOL body;
     body.address = address;
     body.attr1 = attr1;
@@ -51,13 +58,3 @@ void addData(LinkedList* dataTable, short address, short code, char ARE){
     body.ARE = ARE;
     appendNode(address, EMPTY_STRING,  &body, dataTable);
 }
-
-
-/*short int buildFirstWord(FIRST_WORD* w){
-  short int res;
-  w -> src = (w -> src) << 2;
-  w -> funct = (w -> funct) << 4;
-  w -> opcode = (w -> opcode) << 8 ;
-  res =  (w -> dest) | (w -> src) | (w -> funct) | (w -> opcode) ;
-  return res;
-}*/

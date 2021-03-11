@@ -11,7 +11,7 @@ using the words 'symbol' and 'label' interchangably for labelIsValid
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "as_funcs.h"
+#include "asScanners.h"
 #include "utilsGeneral.h"
 #include "utilsAssembler.h"
 #include "asStructsAndMacros.h"
