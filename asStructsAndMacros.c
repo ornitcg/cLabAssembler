@@ -31,6 +31,7 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> symbolFound = NO;  /*symbols flag*/
     strcpy(stat -> fileName , fileName);
     stat -> commandNumber = -1;
+    stat -> addressType = Empty;
     stat -> symbolTable = linkedListInit(sizeof(SYMBOL));            /*starting a linked list of Symbols*/
     stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
@@ -44,15 +45,16 @@ void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1,
     appendNode( 0 , symbol , &body, symbolTable);
 }
 
-void addCode(LinkedList* codeTable, short address, char* inputLine, short code, char ARE){
+void addCode(LinkedList* codeTable, short address, Info comment,char* label, short code, Info ARE){
     CODE_IMG body;
-    strcpy(body.inputLine, inputLine);
+    strcpy(body.label, label);
+    body.comment = comment;
     body.code = code;
     body.ARE = ARE;
     appendNode(address, EMPTY_STRING , &body, codeTable);
 }
 
-void addData(LinkedList* dataTable, short address, short code, char ARE){
+void addData(LinkedList* dataTable, short address, short code, Info ARE){
     CODE_IMG body;
     body.code = code;
     body.ARE = ARE;

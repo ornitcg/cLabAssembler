@@ -13,3 +13,4 @@ int getOperands(char* line,char* opSrc,char* opTarget);
 Info operandAddressType(char* operand, STATUS* stat);
 Info isValidAddressing(char* operand, Info opNumber, STATUS* stat);
 int lookupCommand(char* string);
+Void addOperand(char* opTarget, Info addressType, STATUS* stat);

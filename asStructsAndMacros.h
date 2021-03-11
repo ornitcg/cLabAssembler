@@ -29,6 +29,7 @@ typedef struct STATUS{
     Info symbolFound; /*YES/NO*/
     char fileName[FILENAME_MAX];
     int commandNumber;
+    Info addressType;
     LinkedList* symbolTable;            /*starting a linked list*/
     LinkedList* codeTable;         /*starting a linked list*/
     LinkedList* dataTable;          /*starting a linked list*/
@@ -46,20 +47,20 @@ SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
-    char inputLine[MAX_LINE];
+    Info comment;
     char label[MAX_LABEL];
     short code;
-    char ARE;
+    Info ARE;
 } CODE_IMG;
-void addCode(LinkedList* codeTable, short address, char* inputLine, short code, char ARE);
+void addCode(LinkedList* codeTable, short address, Info comment,char* label, short code, Info ARE); /*address serves as linkedlist key*/
 
 /*********************************************DATA TABLE*******************************************************/
 typedef struct DATA_IMG {
     short data;
-    char ARE;
+    Info ARE;
 } DATA_IMG;
 
-void addData(LinkedList* dataTable, short address, short code, char ARE);
+void addData(LinkedList* dataTable, short address, short code, Info ARE);
 
 /*****************************************COMMAND (x) TABLE*********************************************/
 

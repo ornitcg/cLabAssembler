@@ -48,8 +48,7 @@ Info parseCommandOperands(char* line, STATUS* stat){
     char* opSrc = (char*)malloc(sizeof(line));
     char* opTarget = (char*)malloc(sizeof(line));
     short firstWord, opWord;
-    Info opType; /*instead of addressing*/
-    Info opRes;
+    Info opType ,opRes , comment = Ok; /*instead of addressing*/
     SET_COMMAND_TABLE(cmd);
 
     opNumAllowed = cmd[cmdIndex].operands;          /*for readability*/
@@ -58,29 +57,16 @@ Info parseCommandOperands(char* line, STATUS* stat){
     /* Lets look at the bright side first... and then at errors. it helps with freeing allocated memory on time*/
     if (opNumFound == 0 && opNumAllowed == 0){ /*no operand expected, and 0 received*/
         firstWord = buildFirstWord(cmd[opNumFound].opcode, cmd[opNumAllowed].funct, 0, 0);
-        addData(stat -> dataTable, (stat -> IC)++ , firstWord, 'A');
+        addCode(stat -> dataTable, (stat -> IC)++ , firstWord, A);
     }
     else if( opNumFound == opNumAllowed){
-            if (opNumAllowed == 1 )
-                if ( isValidAddressing(opTarget, Target , stat)  == Yes){
-                    opWord = wordValueOfOperand(opTarget);
-                    addData(stat -> dataTable, (stat -> IC)++ , firstWord, 'A');
-
-                }
-
-            else {
-
-
+            if (opNumAllowed == 1)
+                addOperand(opTarget, Target , stat);
+            else { /*2 allowed*/
+                addOperand(opSrc, Source , stat);
+                addOperand(opTarget, Target , stat);
             }
-            opRes = isValidAddressing(opSrc, Source , stat) /* Addressing type is allowed for this combination of command and operand */
-            if (opRes == Yes){
-                firstWord = buildFirstWord(cmd[opNumAllowed].opcode, cmd[opNumAllowed].funct, 0, something);
-                addData(stat -> dataTable, (stat -> IC)++ , firstWord, 'A');
-            }
-
         }
-
-
     free(opSrc);
     free(opTarget);
 
@@ -101,14 +87,30 @@ Info parseCommandOperands(char* line, STATUS* stat){
         /*Allowed By Judy to generalize the type of Error*/
         return Error;
     }
-
-
-
-
     fprintf(stderr, "DEBUG in parseOperands , commandNumber %d operators: %d line: --|%s|--\n",cmdIndex, opNumAllowed , line);
-
-
 }
+
+
+Void addOperand(char* opTarget, Info addressType, STATUS* stat){
+    if ( isValidAddressing(opTarget, addressType , stat)  == Yes){ /*stat here is updated with the addressType of the checked operand*/
+        if (stat-> addressType == Relative || stat->addressType == Direct )
+            addCode(stat -> dataTable, (stat -> IC)++ , FillLater , 0 , FillLater);
+        else if (stat->addressType == Immediate || stat->addressType == Register ){
+            opWord = wordValueOfOperand(opTarget, stat -> addressType);
+            addCode(stat -> dataTable, (stat -> IC)++ , Empty , opWord , A);
+        /*if  stat -> addressType = Error nothing is added*/
+        }
+    }
+}
+
+short wordValueOfOperand(char* operand, Info addressType){
+    short word;
+    if (addressType == Immediate)
+        return (short)atoi(++operand);
+    if (addressType == Register)
+        return (short)lookupRegister(operand);
+}
+
 
 /* Helper function called by parseCommandOperands only.
 Parses 0/1/2 operands from parameter line
@@ -154,15 +156,14 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
     int cmdIndex = stat -> commandNumber;
     int res, opNumAllowed ;
     Info opAddress = operandAddressType(operand, stat);
+    stat -> addressType = opAddress;
     SET_COMMAND_TABLE(cmd);
     opNumAllowed = cmd[cmdIndex].operands;
 
     if (opAddress == Error) /*Address enum data type, no addressing type was detected, */
         return Error; /*Info enum data type*/
-    if (opNumAllowed == 1 && opType == Source ){ /**/
-        printf("line#%d : Error - Too many operands (in isValidAddressing)\n", stat -> lineNumber);
-        return Error;
-    }/*now check if op type is allowed at this location in command*/
+
+    /*now check if op type is allowed for use at this location in command*/
     if (opNumAllowed == 1 || opType == Target)
         res = firstPosOfChar(cmd[cmdIndex].opTarget, opAddress);
     else if (opType == Source)
