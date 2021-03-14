@@ -1,13 +1,16 @@
 all: prog
 
-prog: assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o
-	gcc -ansi -g -Wall -pedantic -o prog assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o
+prog: assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o buildOutput.o
+	gcc -ansi -g -Wall -pedantic -o prog assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o buildOutput.o
 
-assembler.o: assembler.c  asStructsAndMacros.h
-		gcc -ansi -g -Wall -pedantic  -c assembler.c
+assembler.o: assembler.c  asStructsAndMacros.h asScanners.h
+	gcc -ansi -g -Wall -pedantic  -c assembler.c
 
-asScanners.o: asScanners.c asScanners.h utilsAssembler.h asStructsAndMacros.h linkedList.h utilsGeneral.h symbolFuncs.h instructionFuncs.h commandFuncs.h
-		gcc -ansi -g -Wall -pedantic -c asScanners.c
+asScanners.o: asScanners.c asScanners.h utilsAssembler.h asStructsAndMacros.h linkedList.h utilsGeneral.h symbolFuncs.h instructionFuncs.h commandFuncs.h buildOutput.h
+	gcc -ansi -g -Wall -pedantic -c asScanners.c
+
+buildOutput.o: buildOutput.c buildOutput.h asStructsAndMacros.h
+	gcc -ansi -g -Wall -pedantic -c buildOutput.c
 
 utilsAssembler.o: utilsAssembler.c utilsGeneral.h utilsAssembler.h asStructsAndMacros.h
 	gcc -ansi -g -Wall -pedantic -c utilsAssembler.c

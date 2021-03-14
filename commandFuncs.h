@@ -9,7 +9,7 @@ Info parseCommand(char* command, char* line, STATUS* stat );
 returns 'Error' if input not valid
 and 'Ok' if found valid */
 void parseCommandOperands(char* line, STATUS* stat);
-int getOperands(char* line,char* opSrc,char* opTarget);
+int getOperands(char* line,char* opSrc,char* opTarget,STATUS* stat);
 Info operandAddressType(char* operand, STATUS* stat);
 Info isValidAddressing(char* operand, Info opNumber, STATUS* stat);
 int lookupCommand(char* string);

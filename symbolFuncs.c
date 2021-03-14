@@ -24,7 +24,7 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
     char tmpSymbol[MAX_LINE];
     Info valid;
-    symbol = EMPTY_STRING;
+    strcpy(symbol, EMPTY_STRING);
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND))
@@ -34,13 +34,20 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
     tmpSymbol[cursor] = '\0';
 
     valid = isValidAsSymbol(tmpSymbol, stat);
+
     if (lookupSymbol(stat-> symbolTable, tmpSymbol) != NULL){
-        printf("line# %d: Error - Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
-        stat -> errorExists = Yes;
-        return Error;
+        /*fprintf(stderr,"[1] DEBUG parse symbol \n");*/
+
+        printf("[Error] line# %d: Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
+        return activateErrorFlag(stat);
     }
     else if (valid == Yes){
+        /*fprintf(stderr,"[2] DEBUG parse symbol --%s--  --%s--  \n",symbol, tmpSymbol);*/
+
+
         strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
+        /*fprintf(stderr,"[3] DEBUG parse symbol \n");*/
+
         return Yes ;
     }
     return valid;
@@ -67,15 +74,15 @@ int validSymbolChars(char* symbol){ /*OK*/
 
 Info isValidAsSymbol(char* string, STATUS* stat){
     if (strlen(string) > MAX_LABEL){
-        printf("line# %d: Error - Label is too long: %s  \n",  stat -> lineNumber,string);
+        printf("[Error] line# %d: Label is too long: %s  \n",  stat -> lineNumber,string);
         return Error;
     }
     if (!validSymbolChars(string)){
-        printf("line# %d: Error - Invalid charachters in label %s \n",  stat -> lineNumber, string);
+        printf("[Error] line# %d: Invalid charachters in label %s \n",  stat -> lineNumber, string);
         return Error;
     }
     if (isReservedWord(string) == Yes){
-        printf("line# %d: Error - Used reserved word for label \n",  stat -> lineNumber);
+        printf("[Error] line# %d: Used reserved word for label \n",  stat -> lineNumber);
         return Error;
     }
     return Yes;

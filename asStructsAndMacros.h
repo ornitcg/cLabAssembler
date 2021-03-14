@@ -6,9 +6,9 @@
 #include "utilsAssembler.h"
 
 #define MAX_LINE 81
-#define MAX_LABEL 31
-#define MAX_INSTRUCTION 7
-#define MAX_CMD_LEN 4
+#define MAX_LABEL 32
+#define MAX_INSTRUCTION 10
+#define MAX_CMD_LEN 5
 #define REGISTER_LEN 3
 #define REGISTERS_NUMBER 8
 #define INIT_ADDRESS 100
@@ -41,6 +41,10 @@ typedef struct STATUS{
 
 void initStatus(STATUS* stat, char* fileName);
 void resetStatStructForLine(STATUS* stat);
+Info activateErrorFlag(STATUS* stat);
+Info getAddressType(Info opType,STATUS* stat);
+void freeMemory(STATUS* stat);
+
 /**************************************************SYMBOL TABLE*****************************************/
 typedef struct SYMBOL {
     short address;
@@ -50,7 +54,8 @@ typedef struct SYMBOL {
 
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2);
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
-
+void updateSymbolTable(STATUS* stat);
+SYMBOL* getSymbolBody (Node* cursor);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
     Info comment;
@@ -68,7 +73,7 @@ typedef struct DATA_IMG {
 } DATA_IMG;
 
 void addData(LinkedList* dataTable, short address, short code, Info ARE);
-
+CODE_IMG* getCodeImageBody (Node* cursor);
 /*****************************************COMMAND (x) TABLE*********************************************/
 
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/

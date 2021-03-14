@@ -9,6 +9,8 @@
 #define COMMA ','
 #define EMPTY_STRING ""
 #define QUOTE '"'
+#define MAX_STR 81
+
 /*
 Checks if the file name is valid and if it can be opened
 returns pointer to file if OK and NULL otherwise
@@ -30,9 +32,10 @@ int isValidAsNumber(char* string);
 params: char* str -  the string to trim
 returns: the trimmed string
 */
-char* trimWhiteSpaces(char* string);
-/*void trimWhiteSpaces(char* string);*/
 
+void trimWhiteSpaces(char* string);
+/*void trimWhiteSpaces(char* string);*/
+void trimNchars(char* line,int numChars);
 /*
 Checks if a charachter is a space or tab
 params: char c- the charachter to check
@@ -41,4 +44,5 @@ returns: 1 (YES) if c is a whitespace , and 0 (NO) otherwise
 int isWhiteSpace(char c);
 int externalCommas(char* line);
 int validSymbolChars(char* symbol);
+void do_nothing();
 #endif

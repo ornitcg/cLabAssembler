@@ -15,3 +15,4 @@ params: int ICF -  the size to add to data symbols
         data table - to be updated with ICF
  */
 void updateDataTable(int ICF);
+void fillMissingDetailsInCodeTable(STATUS* stat);

@@ -20,6 +20,9 @@ int lookupRegister(char* string);
 Info isReservedWord(char* string);
 int validInWordRange(short num);
 int toIgnore(char* line);
+
 short int buildFirstWord(short opcode, short funct, short src, short dest);
+void printEnumName(Info name);
+Info isValidString(char* string);
 
 #endif

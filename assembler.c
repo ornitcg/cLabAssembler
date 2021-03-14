@@ -7,7 +7,6 @@ no comments in middle of line.
 using the words 'symbol' and 'label' interchangably for labelIsValid
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,9 +14,6 @@ using the words 'symbol' and 'label' interchangably for labelIsValid
 #include "utilsGeneral.h"
 #include "utilsAssembler.h"
 #include "asStructsAndMacros.h"
-
-
-
 
 int main(int argc, char *argv[]) {
 

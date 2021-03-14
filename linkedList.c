@@ -16,8 +16,8 @@ LinkedList* linkedListInit(size_t bodySize){
 void appendNode(short keyNum , char* keyStr , void* body , LinkedList* ll){
     Node* newNode = (Node*)malloc(sizeof(Node));
     size_t size = ll -> bodySize;
-    newNode->body  = (void*)malloc(size);
-    memcpy(newNode->body, body, size);
+    newNode -> body  = (void*)malloc(size);
+    memcpy(newNode -> body, body, size);
     if (strlen(keyStr)!=0){
         strcpy(newNode -> keyStr, keyStr);
     }
@@ -34,12 +34,18 @@ void appendNode(short keyNum , char* keyStr , void* body , LinkedList* ll){
 }
 
 
-void printList(LinkedList* ll){
+void printList(LinkedList* ll, char type){
     Node* cursor = ll->head;
-    while (cursor-> next != NULL){
+    /*fprintf(stderr," [1] in printList\n");*/
+
+    while (cursor != NULL){
+
+        if (type == 'T')
+            fprintf(stderr, "DEBUG -in printList key is %s\n",cursor -> keyStr);
+
+        if (type == 'N')
+            fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> keyNum);
         cursor = cursor -> next;
-        /*fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> key);*/
-        return;
     }
 }
 

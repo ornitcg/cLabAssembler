@@ -42,20 +42,53 @@ void remLastChar(char* string){
 params: char* str -  the string to trim
 returns: the trimmed string (in different ways of use for different types of strings)
 */
-char* trimWhiteSpaces(char* string){
+void trimWhiteSpaces(char* string){
     int last;
-    if (strlen(string) == 0 )
-      return string;
-    while (isWhiteSpace(string[0])){
-      string++;
+    char strP[MAX_STR] = EMPTY_STRING;
+    char* tmpStr = strP;
+    strcpy(strP,string);
+    /*fprintf(stderr,"[1] DEBUG trimwhitespaces instruction--|%s|--\n", string);*/
+
+    if (strlen(tmpStr) == 0 )
+      return;
+
+    while (isWhiteSpace(tmpStr[0]) == YES){
+      tmpStr += 1;
     }
-    last = strlen(string)-1;
-    while ((last+1) && isWhiteSpace(string[last])){
-      string[last] = '\0';
+    last = strlen(tmpStr)-1;
+
+    while ((last >= 0) && isWhiteSpace(tmpStr[last])){
+      tmpStr[last] = '\0';
       last--;
     }
-    return string;
+
+    strcpy(string, EMPTY_STRING);
+    strcpy(string, tmpStr);
+
+    /*fprintf(stderr,"[2][DEBUG] in trimWhiteSpaces , string is --|%s|--\n",string);*/
+
 }
+
+
+void trimNchars(char* line,int numChars){
+    char tmpStr[MAX_STR] = EMPTY_STRING;
+    char* strP = tmpStr;
+    strcpy(strP,line);
+    /*fprintf(stderr,"[1] DEBUG trimNchars --|%s|--\n", line);*/
+
+    if (strlen(strP) == 0)
+        return;
+
+    strP += numChars;
+
+    strcpy(line, EMPTY_STRING);
+    strcpy(line, strP);
+
+    /*fprintf(stderr,"[2][DEBUG] in trimWhiteSpaces , string is --|%s|--\n",string);*/
+
+
+}
+
 /*void trimWhiteSpaces(char* string){
     int last;
     char* tmpstr;
@@ -120,4 +153,9 @@ int isValidAsNumber(char* string){
         cursor++;
     }
     return YES;
+}
+
+
+
+void do_nothing(){
 }

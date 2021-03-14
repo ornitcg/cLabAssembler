@@ -19,11 +19,10 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     int ind;
     /* At this point , line is clean of heading whitespaces */
     int cursor= firstPosOfChar(line, WHITE_SPACE);       /*find the first whitespace position*/
-    command = EMPTY_STRING;
+    strcpy(command, EMPTY_STRING);
     if (strlen(line) == 0){
-        printf("line#%d : Error - Command expected\n", stat -> lineNumber);
-        stat -> errorExists = Yes;
-        return Error;
+        printf("[Error] line#%d : Command expected\n", stat -> lineNumber);
+        return activateErrorFlag(stat);
     }
     if (cursor == NOT_FOUND)
         strcpy(command, line); /* some commands dont require operands so this case may be ok*/
@@ -32,11 +31,10 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
         command[cursor] = '\0';
     }
     ind = lookupCommand(command);
-    fprintf(stderr, "DEBUG - in parsecommand: index found %d for command %s\n",ind, command);
+    fprintf(stderr, "[1][DEBUG] - in parsecommand: index found %d for command --|%s|--\n",ind, command);
     if (ind == NOT_FOUND){
-        printf("line#%d: Error - Invalid command\n", stat -> lineNumber);
-        stat -> errorExists = Yes;
-        return Error;
+        printf("[Error] line#%d: Invalid command\n", stat -> lineNumber);
+        return activateErrorFlag(stat);
     }
     stat -> commandNumber = ind; /*adding the commandNumber to STATUS to make access easier*/
     return Ok;
@@ -52,25 +50,29 @@ void parseCommandOperands(char* line, STATUS* stat){
     Info errorStatus = Ok; /*instead of addressing*/
     SET_COMMAND_TABLE(cmd);
     opNumAllowed = cmd[cmdIndex].operands;          /*for readability*/
+    /*fprintf(stderr," [1] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
 
     /*Searching for operands blindly, Errors are checked later*/
-    opNumFound = getOperands(line, opSrc, opTarget); /*operands will be empty if not found*/
+    opNumFound = getOperands(line, opSrc, opTarget, stat); /*operands will be empty if not found*/
+    /*fprintf(stderr," [2] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
     stat -> srcOpAddressType = operandAddressType(opSrc , stat);
     stat -> targetOpAddressType = operandAddressType(opTarget , stat);
+    /*fprintf(stderr," [3] [DEBUG] parseCommandOperands --|%s|--|%s| \n", opSrc , opTarget);*/
 
     if(externalCommas(line)){ /*comma before first operand or after last operand are not allowed*/
-        printf("line#%d : Error - leading/tailing comma are not allowed\n", stat -> lineNumber);
+        printf("[Error] line#%d: Leading/tailing comma are not allowed\n", stat -> lineNumber);
         /*Allowed By Judy Issacs to generalize the type of Error*/
         errorStatus = Error;
     }
     /*less operand than expected (assuming that if missing comma the whole string is received as one operand (most likely with spaces but I chose to look at it as a missing operand error))*/
     if ((opNumFound < opNumAllowed )){
-        printf("line#%d : Error - missing Operand(s) \n", stat -> lineNumber);
+        printf("[Error] line#%d: Missing Operand(s) \n", stat -> lineNumber);
         errorStatus = Error;
     }
     /*got more operands than expected*/
     if ((opNumAllowed  < opNumFound)){
-        printf("line#%d : Error - Too many operands\n", stat -> lineNumber);
+        printf("[Error] line#%d: Too many operands\n", stat -> lineNumber);
         /*Allowed By Judy to generalize the type of Error*/
         errorStatus = Error;
     }
@@ -78,22 +80,39 @@ void parseCommandOperands(char* line, STATUS* stat){
         errorStatus = Error;
 
     if (errorStatus == Ok ){
+        /*fprintf(stderr," [4] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
         /*if (opNumFound == 0 && opNumAllowed == 0)*/ /*no operand expected, and 0 received*/
         addFirstWord(opNumFound, opSrc, opTarget, stat);
+        /*fprintf(stderr," [5] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
         if(opNumFound > 0 && opNumFound == opNumAllowed){
-                if (opNumAllowed == 1)
+            /*fprintf(stderr," [6] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
+                if (opNumAllowed == 1){
+                /*fprintf(stderr," [7] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
                     addOperandWord(opTarget, Target, stat);
-                else { /*2 allowed*/
-                    addOperandWord(opSrc, Source , stat);
-                    addOperandWord(opTarget, Target , stat);
                 }
+                else { /*2 allowed*/
+                    /*fprintf(stderr," [8] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
+                    addOperandWord(opSrc, Source , stat);
+                    /*fprintf(stderr," [9] [DEBUG] parseCommandOperands --|%s|--\n", opSrc);*/
+
+                    addOperandWord(opTarget, Target , stat);
+                    /*fprintf(stderr," [10] [DEBUG] parseCommandOperands --|%s|--\n", opTarget);*/
+
+                }
+                /*fprintf(stderr," [11] [DEBUG] parseCommandOperands --|%s|--\n", line);*/
+
         }
     }
-    else stat -> errorExists = Yes;
+    else activateErrorFlag(stat);
 
     free(opSrc);
     free(opTarget);
-    fprintf(stderr, "DEBUG in parseOperands , commandNumber %d operators: %d line: --|%s|--\n",cmdIndex, opNumAllowed , line);
+    /*fprintf(stderr, "DEBUG in parseOperands , commandNumber %d operators: %d line: --|%s|--\n",cmdIndex, opNumAllowed , line);*/
 }
 
 void addFirstWord(int opNum, char* opSrc, char* opTarget, STATUS* stat){
@@ -113,16 +132,30 @@ void addFirstWord(int opNum, char* opSrc, char* opTarget, STATUS* stat){
 
 void addOperandWord(char* operand, Info opType, STATUS* stat){
     Info addressType;
+    /*SYMBOL* symbol = NULL;*/
     short opWord;
-    if ( isValidAddressing(operand, opType,  stat)  == Yes){ /*stat here is updated with the addressType of the checked operand*/
-        if (opType == Source)
-            addressType = (stat -> srcOpAddressType);
-        else if (opType == Target)
-            addressType = (stat -> targetOpAddressType);
+    /*fprintf(stderr," [1] [DEBUG] addOperandWord --|%s|--\n", operand);*/
 
-        if ( addressType == Relative ||  addressType == Direct ) /*operand contains label*/
-            addCode(stat -> dataTable, (stat -> IC)++ , FillLater , operand , 0 , FillLater);
+    if ( isValidAddressing(operand, opType,  stat)  == Yes){ /*stat here is updated with the addressType of the checked operand*/
+
+        addressType = getAddressType(opType,stat); /*Immediate,Direct,Relative,Register*/
+        /*fprintf(stderr," [2] [DEBUG] addOperandWord --|%s|--", operand);printEnumName(addressType);*/ /*DEBUG*/
+
+        if (addressType == Immediate || addressType == Relative)
+            operand+=1;
+        if ( addressType == Relative ||  addressType == Direct ){ /*operand contains label*/
+            /*symbol = lookupSymbol(stat -> symbolTable, operand);*/
+            fprintf(stderr," [3] [DEBUG] addOperandWord --|%s|--", operand);printEnumName(addressType); /*DEBUG*/
+
+            /*if (symbol != NULL && symbol -> attr2 == Extern)
+                addCode(stat -> dataTable, (stat -> IC)++ , addressType , operand , 0 , E);
+            else if (symbol == NULL)*/
+                addCode(stat -> dataTable, (stat -> IC)++ , addressType , operand , 0 , FillLater);
+        }
         else if (addressType == Immediate || addressType == Register ){
+
+            fprintf(stderr," [4] [DEBUG] addOperandWord --|%s|--", operand);printEnumName(addressType); /*DEBUG*/
+
             opWord = wordValueOfNoneLabelOperand(operand ,  addressType);
             addCode(stat -> dataTable, (stat -> IC)++ , Empty , EMPTY_STRING , opWord , A);
         /*if  stat -> addressType = Error nothing is added*/
@@ -136,7 +169,7 @@ Parses 0/1/2 operands from parameter line
 fits them into parameters opSrc and opTarget
 regardless of their validity as operands
 returns number of operand found*/
-int getOperands(char* line,char* opSrc,char* opTarget){
+int getOperands(char* line,char* opSrc,char* opTarget, STATUS* stat){
     int posComma = firstPosOfChar(line,COMMA);
     strcpy(opSrc, EMPTY_STRING);    /*default*/
     strcpy(opTarget, EMPTY_STRING); /*default*/
@@ -148,19 +181,20 @@ int getOperands(char* line,char* opSrc,char* opTarget){
         strcpy(opTarget,line);
         return 1;
     }
-
     else { /*more than one operand expected*/
         strncpy(opSrc,line,posComma);   /*insert first operand into opSrc*/
         line += (posComma+1);           /*cut the operand away from line, ***including the comma****/
         opSrc[posComma] = '\0';
-        strcpy(opSrc, trimWhiteSpaces(opSrc));  /*remove whitespaces around the operand found*/
-        strcpy(line, trimWhiteSpaces(line));    /*remove whitespaces around the rest of line*/
+        trimWhiteSpaces(opSrc);  /*remove whitespaces around the operand found*/
+        trimWhiteSpaces(line);    /*remove whitespaces around the rest of line*/
         if (firstPosOfChar(line, COMMA) != NOT_FOUND){ /*if any comma is found at this point this is an error*/
-            printf("line# d: Error - Too many commas\n"/*, stat -> lineNumber*/);
+            printf("[Error -d ] line# d: Too many commas\n"/*, stat -> lineNumber*/);
+            activateErrorFlag(stat);
             return 1; /* error since 2  operands are expected*/
         }
         if (strlen(line) == 0){ /*no comma but also nothing else is left in line */
-            printf("line# d : Error - missing operand\n"/*, stat -> lineNumber*/);
+            printf("[Error -d ]line# d:  missing operand\n"/*, stat -> lineNumber*/);
+            activateErrorFlag(stat);
             return 1; /* error since 2 operands are expected*/
         }
         strcpy(opTarget,line); /*the rest of line is taken as target operand*/
@@ -185,7 +219,7 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
         addressType = (stat -> targetOpAddressType);
 
     if (addressType == Error) /*Address enum data type, no addressing type was detected, */
-        return Error; /*Info enum data type*/
+        return activateErrorFlag(stat);; /*Info enum data type*/
 
     /*now check if op type is allowed for use at this location in command*/
     if (opNumAllowed == 1 || opType == Target)
@@ -193,8 +227,8 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
     else if (opType == Source)
         res = firstPosOfChar(cmd[cmdIndex].opSrc, addressType);
     if (res == NOT_FOUND){
-        printf("line#%d : Error - Invalid adressing type op operand\n", stat -> lineNumber);
-        return Error;
+        printf("[Error] line#%d: Invalid adressing type op operand\n", stat -> lineNumber);
+        return activateErrorFlag(stat);;
     }
     return Yes;
 }
@@ -216,26 +250,26 @@ Info operandAddressType(char* operand,  STATUS* stat){
         operand++;
         if (isValidAsNumber(operand))
             return Immediate;
-        printf("line#%d : Error - Operand is invalid as Immediate\n", stat -> lineNumber);
-        return Error;
+        printf("[Error] line#%d: Operand is invalid as Immediate\n", stat -> lineNumber);
+        return activateErrorFlag(stat);
     }
     if (operand[0] == RELATIVE_IDENTIFIER){ /*check if operand is relative*/
         operand++;
         if (isValidAsSymbol(operand, stat)){
             sym = lookupSymbol(stat -> symbolTable, operand);
             if (sym!= NULL && (sym -> attr2)== Extern){
-                    printf("line#%d : Error - Extern Label cannot be used in relative addressing\n", stat -> lineNumber);
-                    return Error;
+                    printf("[Error] line#%d: Extern Label cannot be used in relative addressing\n", stat -> lineNumber);
+                    return activateErrorFlag(stat);
             }
             else  return Relative;
         }
-        printf("line#%d : Error - Operand is an invalid symbol\n", stat -> lineNumber);
-        return Error;
+        printf("[Error] line#%d: Operand is an invalid symbol\n", stat -> lineNumber);
+        return activateErrorFlag(stat);
     }
     if (isValidAsSymbol(operand, stat))
         return Direct;
-    else  printf("line#%d : Error - Operand is an invalid symbol\n", stat -> lineNumber);
-    return Error;
+    else  printf("[Error] line#%d: Operand is an invalid symbol\n", stat -> lineNumber);
+    return activateErrorFlag(stat);
 }
 
 int lookupCommand(char* string){

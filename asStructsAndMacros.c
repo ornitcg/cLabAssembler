@@ -40,6 +40,17 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
+Info activateErrorFlag(STATUS* stat){
+    stat -> errorExists = Yes;
+    return Error;
+}
+Info getAddressType(Info opType,STATUS* stat){
+    if (opType == Source)
+        return stat -> srcOpAddressType;
+    if (opType == Target)
+        return stat -> targetOpAddressType;
+    return Error;
+}
 
 void resetStatStructForLine(STATUS* stat){
     stat -> lineNumber ++;
@@ -54,11 +65,35 @@ void resetStatStructForLine(STATUS* stat){
 
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2){
     SYMBOL body;
+    fprintf(stderr," [1] DEBUG addSymbol - added --|%s|--\n", symbol);
+
     body.address = address;
     body.attr1 = attr1;
     body.attr2 = attr2;
     appendNode( 0 , symbol , &body, symbolTable);
 }
+
+
+SYMBOL* getSymbolBody (Node* cursor){
+    return (SYMBOL*)(cursor -> body);
+}
+
+/* Updates The symbol table at the end of the first pass
+wherever there is a symbol that is related to dataTableits
+ address should be shifted with the size of ICF */
+void updateSymbolTable(STATUS* stat){
+    Node* cursor = stat -> symbolTable -> head;
+    SYMBOL* body;
+    while (cursor != NULL){
+        body = getSymbolBody(cursor);
+        if (  body -> attr1 == Data)
+            (body -> address) += stat -> ICF;
+        cursor = cursor -> next;
+    }
+}
+
+
+
 
 void addCode(LinkedList* codeTable, short address, Info comment, char* label, short code, Info ARE){
     CODE_IMG body;
@@ -69,9 +104,20 @@ void addCode(LinkedList* codeTable, short address, Info comment, char* label, sh
     appendNode(address, EMPTY_STRING , &body, codeTable);
 }
 
+CODE_IMG* getCodeImageBody (Node* cursor){
+    return (CODE_IMG*)(cursor -> body);
+}
+
 void addData(LinkedList* dataTable, short address, short code, Info ARE){
     CODE_IMG body;
     body.code = code;
     body.ARE = ARE;
     appendNode(address, EMPTY_STRING,  &body, dataTable);
+}
+
+
+void freeMemory(STATUS* stat){
+    killList(stat->symbolTable);
+    killList(stat->codeTable);
+    killList(stat->dataTable);
 }
