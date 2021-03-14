@@ -5,7 +5,7 @@
 #define EXT_AS ".as"
 
 /*Info contains a bunch of word that are helpfull for readability*/
-enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative ='2' , Register ='3' ,Error = -1, No, Yes, Ok, Source, Target, Code , Data, String,  Entry , Extern , Empty , FillLater };
+enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative ='2' , Register ='3' ,Error = -1, No, Yes, Ok, Source, Target, Code , Data, String,  Entry , Extern , Empty  , FillLater ='?' };
 
 typedef enum Info Info;
 
@@ -15,6 +15,7 @@ typedef enum Info Info;
 */
 void DO_SOMETHING();
 short wordValueOfNoneLabelOperand();
+Info isValidAsNumber(char* string);
 
 int lookupRegister(char* string);
 Info isReservedWord(char* string);

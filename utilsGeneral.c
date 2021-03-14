@@ -88,22 +88,12 @@ void trimNchars(char* line,int numChars){
 
 
 }
+int isEmptyString(char* string){
+    if (strlen(string)==0)
+        return YES;
+    return NO;
+}
 
-/*void trimWhiteSpaces(char* string){
-    int last;
-    char* tmpstr;
-    if (strlen(string) == 0 )
-      return;
-    while (isWhiteSpace(tmpstr[0])){
-      tmpstr++;
-    }
-    last = strlen(tmpstr)-1;
-    while ((last+1)>0 && isWhiteSpace(tmpstr[last])){
-      tmpstr[last] = '\0';
-      last--;
-    }
-    strcpy(string, tmpstr);
-}*/
 int externalCommas(char* line){
     int len = strlen(line);
     if (len > 0)
@@ -140,20 +130,7 @@ int firstPosOfChar(char* string, char targetChar){
 void emptyString(char* string){
     string[0] = '\0';
 }
-/*asuming input has no heading or tailing whitespaces*/
-int isValidAsNumber(char* string){
-    int cursor = 0;
-    if (strlen(string)==0 )
-        return NO;
-    if (string[0] == '-' || string[0]=='+')
-        cursor++;
-    while(string[cursor] != '\0'){
-        if (string[cursor] < 48 || string[cursor] > 57 )
-            return NO;
-        cursor++;
-    }
-    return YES;
-}
+
 
 
 

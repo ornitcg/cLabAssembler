@@ -111,7 +111,20 @@ short  buildFirstWord(short opcode, short funct, short src, short dest){
   return res;
 }
 
-
+/*asuming input has no heading or tailing whitespaces*/
+Info isValidAsNumber(char* string){
+    int cursor = 0;
+    if ( strlen(string)==0 )
+        return No;
+    if ( string[0] == '-' || string[0]=='+' )
+        cursor++;
+    while(string[cursor] != '\0'){
+        if ( string[cursor] < 48 || string[cursor] > 57 )
+            return No;
+        cursor++;
+    }
+    return Yes;
+}
 
 Info isReservedWord(char* string){
     int i=0;
@@ -135,7 +148,7 @@ short wordValueOfNoneLabelOperand(char* operand, Info addressType){
 }
 
 int validInWordRange(short num){
-    if(num >= 2048 && num <= 2047)
+    if(num >= -2048 && num <= 2047)
         return YES;
     return NO;
  }

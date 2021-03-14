@@ -9,6 +9,9 @@
 #define COMMA ','
 #define EMPTY_STRING ""
 #define QUOTE '"'
+#define DECIMAL_POINT '.'
+#define EXTENTION_IDENTIFIER '.'
+
 #define MAX_STR 81
 
 /*
@@ -27,7 +30,6 @@ void remLastChar(char* string);
 void emptyString(char* string);
 
 int firstPosOfChar(char* string, char targetChar);
-int isValidAsNumber(char* string);
 /*removes leading and trailing whitespaces from a string
 params: char* str -  the string to trim
 returns: the trimmed string
@@ -42,6 +44,7 @@ params: char c- the charachter to check
 returns: 1 (YES) if c is a whitespace , and 0 (NO) otherwise
 */
 int isWhiteSpace(char c);
+int isEmptyString(char* string);
 int externalCommas(char* line);
 int validSymbolChars(char* symbol);
 void do_nothing();

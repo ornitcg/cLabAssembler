@@ -52,28 +52,29 @@ typedef struct SYMBOL {
     enum Info attr2; /*sometimes there maybe 2 attributes*/
 } SYMBOL;
 
-void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2);
+void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat);
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 void updateSymbolTable(STATUS* stat);
 SYMBOL* getSymbolBody (Node* cursor);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
     Info comment;
+    int lineNumber;
     char label[MAX_LABEL];
     short code;
     Info ARE;
 } CODE_IMG;
 
-void addCode(LinkedList* codeTable, short address, Info comment,char* label, short code, Info ARE); /*address serves as linkedlist key*/
-
+void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE);
+CODE_IMG* getCodeImageBody (Node* cursor);
 /*********************************************DATA TABLE*******************************************************/
 typedef struct DATA_IMG {
     short data;
     Info ARE;
 } DATA_IMG;
 
-void addData(LinkedList* dataTable, short address, short code, Info ARE);
-CODE_IMG* getCodeImageBody (Node* cursor);
+void addData(LinkedList* dataTable, short address, short data, Info ARE);
+DATA_IMG* getDataImageBody (Node* cursor);
 /*****************************************COMMAND (x) TABLE*********************************************/
 
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/
@@ -85,6 +86,7 @@ typedef char reservedArr[5][MAX_LABEL] ; /*for array of registers names*/
 #define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}
 /*#define char otherReserved*/
 /*****************************************COMMAND (x) TABLE*********************************************/
+void printList(LinkedList* ll, char type);
 
 /*This is the table of 16 commands, to be defined int the first pass function using macro*/
 typedef struct CMD{

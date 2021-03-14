@@ -44,12 +44,13 @@ Info activateErrorFlag(STATUS* stat){
     stat -> errorExists = Yes;
     return Error;
 }
+
 Info getAddressType(Info opType,STATUS* stat){
     if (opType == Source)
         return stat -> srcOpAddressType;
     if (opType == Target)
         return stat -> targetOpAddressType;
-    return Error;
+    return Error;/*this line was just necesary for compiler. this function assumes validity, thus no error messages*/
 }
 
 void resetStatStructForLine(STATUS* stat){
@@ -61,12 +62,34 @@ void resetStatStructForLine(STATUS* stat){
     stat -> targetOpAddressType = Empty;
 }
 
+void printList(LinkedList* ll, char type){
+    Node* cursor = ll->head;
+    SYMBOL* symbody =NULL;
 
+    /*fprintf(stderr," [1] in printList\n");*/
 
-void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2){
+    while (cursor != NULL){
+
+        if (type == 'T'){
+            symbody = getSymbolBody(cursor);
+            fprintf(stderr, "DEBUG -in printList key is %s The value id %d attr2 =",cursor -> keyStr, symbody -> address);
+            printEnumName(symbody->attr2);
+            printf("\n");
+        }
+        if (type == 'N')
+            fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> keyNum);
+        cursor = cursor -> next;
+    }
+}
+
+void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat){
     SYMBOL body;
-    fprintf(stderr," [1] DEBUG addSymbol - added --|%s|--\n", symbol);
-
+    if (lookupSymbol(symbolTable, symbol) != NULL){
+        /*fprintf(stderr,"[1] DEBUG parse symbol \n");*/
+        printf("[Error] line# %d: Label %s is already in symbol table\n", stat -> lineNumber, symbol);
+        activateErrorFlag(stat);
+    }
+    /*fprintf(stderr," [1] DEBUG addSymbol - added --|%s|--\n", symbol);*/
     body.address = address;
     body.attr1 = attr1;
     body.attr2 = attr2;
@@ -95,9 +118,10 @@ void updateSymbolTable(STATUS* stat){
 
 
 
-void addCode(LinkedList* codeTable, short address, Info comment, char* label, short code, Info ARE){
+void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE){
     CODE_IMG body;
     strcpy(body.label, label);
+    body.lineNumber = lineNumber;
     body.comment = comment;
     body.code = code;
     body.ARE = ARE;
@@ -108,11 +132,15 @@ CODE_IMG* getCodeImageBody (Node* cursor){
     return (CODE_IMG*)(cursor -> body);
 }
 
-void addData(LinkedList* dataTable, short address, short code, Info ARE){
-    CODE_IMG body;
-    body.code = code;
+void addData(LinkedList* dataTable, short address, short data, Info ARE){
+    DATA_IMG body;
+    body.data = data;
     body.ARE = ARE;
     appendNode(address, EMPTY_STRING,  &body, dataTable);
+}
+
+DATA_IMG* getDataImageBody (Node* cursor){
+    return (DATA_IMG*)(cursor -> body);
 }
 
 

@@ -34,20 +34,7 @@ void appendNode(short keyNum , char* keyStr , void* body , LinkedList* ll){
 }
 
 
-void printList(LinkedList* ll, char type){
-    Node* cursor = ll->head;
-    /*fprintf(stderr," [1] in printList\n");*/
 
-    while (cursor != NULL){
-
-        if (type == 'T')
-            fprintf(stderr, "DEBUG -in printList key is %s\n",cursor -> keyStr);
-
-        if (type == 'N')
-            fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> keyNum);
-        cursor = cursor -> next;
-    }
-}
 
 void killList(LinkedList* ll){
     Node* cursor = ll -> tail;

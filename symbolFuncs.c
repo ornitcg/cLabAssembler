@@ -22,35 +22,22 @@ int containsLabelDef(char* line){
 /* returns Yes/No/Error*/
 Info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
-    char tmpSymbol[MAX_LINE];
-    Info valid;
+    char tmpSymbol[MAX_LINE] = EMPTY_STRING;
     strcpy(symbol, EMPTY_STRING);
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND))
         return No;
-
     strncpy(tmpSymbol, line, cursor ); /*get the string part until the colon sign*/
     tmpSymbol[cursor] = '\0';
 
-    valid = isValidAsSymbol(tmpSymbol, stat);
-
-    if (lookupSymbol(stat-> symbolTable, tmpSymbol) != NULL){
-        /*fprintf(stderr,"[1] DEBUG parse symbol \n");*/
-
-        printf("[Error] line# %d: Label %s is already in symbol table\n", stat -> lineNumber, tmpSymbol);
-        return activateErrorFlag(stat);
-    }
-    else if (valid == Yes){
+    if (isValidAsSymbol(tmpSymbol, stat) == Yes){
         /*fprintf(stderr,"[2] DEBUG parse symbol --%s--  --%s--  \n",symbol, tmpSymbol);*/
-
-
         strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
         /*fprintf(stderr,"[3] DEBUG parse symbol \n");*/
-
         return Yes ;
     }
-    return valid;
+    return activateErrorFlag(stat);
 }
 
 
@@ -78,7 +65,7 @@ Info isValidAsSymbol(char* string, STATUS* stat){
         return Error;
     }
     if (!validSymbolChars(string)){
-        printf("[Error] line# %d: Invalid charachters in label %s \n",  stat -> lineNumber, string);
+        printf("[Error] line# %d: Invalid charachters in label --|%s|-- \n",  stat -> lineNumber, string);
         return Error;
     }
     if (isReservedWord(string) == Yes){

@@ -17,6 +17,8 @@
 
 void runAssembler(FILE* inputFile, char* fileName){
     STATUS stat;
+    /*fprintf(stderr,"%s\n",fileName);*/
+    fileName[firstPosOfChar(fileName,EXTENTION_IDENTIFIER)]='\0';
     initStatus(&stat, fileName); /*to contain status details of current line*/
     /*fprintf(stderr, "******** DEBUG - in runAssembler\n");*/
     firstPass(inputFile, &stat);
@@ -41,65 +43,30 @@ void firstPass(FILE* inputFile , STATUS* stat){
     fprintf(stderr,"%d DEBUG  STARTING FIRST PASS\n", stat->lineNumber);
 
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
-        fprintf(stderr,"\n\n");
-        fprintf(stderr,"[1]%d DEBUG FIRST PASS before first trim line is: --|%s|--\n", stat->lineNumber, line);
-
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-
-
-        /*fprintf(stderr,"[2]%d DEBUG FIRST PASS after first trim line : --|%s|--\n", stat->lineNumber, line);*/
+        /*fprintf(stderr," [DEBUG] line#%d  line string: --|%s|--\n", stat->lineNumber,line);
+        fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
             /***********************************SYMBOL CHECK**************************************/
-            /*fprintf(stderr,"[2] DEBUG firstpass1 firstpass\n");*/
-
-            /*fprintf(stderr,"[3]%d DEBUG FIRST PASS inside to ignore--|%s|--\n", stat->lineNumber, line);*/
-
             stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
               /*relevant to lines that begin with label definition*/
-              /*fprintf(stderr,"[3] DEBUG firstpass1 firstpass\n");*/
-             /*fprintf(stderr,"[4]%d DEBUG FIRST PASS symbol found is--|%s|--\n", stat->lineNumber, symbol);*/
-
             if (strlen(symbol) > 0) {
-                /*fprintf(stderr,"[5]%d DEBUG  FIRST PASS line before trim symbol--|%s|--\n", stat->lineNumber, line);*/
-
-                /*fprintf(stderr,"[3] DEBUG firstpass1 - line# %d The symbol that was found is --|%s|--\n", stat-> lineNumber, symbol);*/
-                trimNchars(line, strlen(symbol)); /*restart line from end of symbol, which is empty if*/
+                trimNchars(line, strlen(symbol)+1); /*restart line from end of symbol, which is empty if*/
                 trimWhiteSpaces(line);
-                /*fprintf(stderr,"[6]%d DEBUG  FIRST PASS line after trim symbol--|%s|--\n", stat->lineNumber, line);*/
-
                 /*restart line from end of label, "+1" stand for the colon in the end*/
             }
-
-            /*fprintf(stderr,"[7]%d DEBUG FIRST PASS line before parse instruction--|%s|--\n", stat->lineNumber, line);*/
-
             /**********************************INSTRUCTION CHECK***********************************/
             instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
-            /*fprintf(stderr,"[8]%d DEBUG FIRST PASS line after parse instruction--|%s|--\n", stat->lineNumber, line);*/
-
 
             if ( instType != Error && instType != No ){ /*then need to cut off instruction and trim spaces from rest of line*/
-                /*fprintf(stderr,"[9]%d DEBUG FIRST PASS line before trim instruction--|%s|--\n", stat->lineNumber, line);*/
-
                 trimNchars(line, strlen(instruction)); /*restart line from end of instruction, which is empty if*/
                 trimWhiteSpaces(line);
-
-                /*fprintf(stderr,"[10]%d DEBUG FIRST PASS line after trim instruction--|%s|--\n", stat->lineNumber, line);*/
-                /*fprintf(stderr,"[11]%d DEBUG FIRST PASS  instruction--|%s|--\n", stat->lineNumber, instruction);*/
-
-                /*fprintf(stderr,"DEBUG firstpass2 - line# %d The Istruction that was found is --|%s|--\n", stat-> lineNumber, instruction);*/
-
             } /*else there was a problem in finding a command*/
-
             if  ( instType == Data || instType == String ){
-
                 if (stat -> symbolFound == Yes){
-                    /*fprintf(stderr,"[3.5] DEBUG firstpass - DATA/STRING preceeding symbol : --|%s|--\n", symbol);*/
-
-                    addSymbol(stat -> symbolTable, stat-> DC , symbol, Data, Empty);
-                    /*fprintf(stderr,"[3.5] DEBUG firstpass - DATA/STRING preceeding symbol : --|%s|--\n", symbol);*/
-
-                    printList(stat -> symbolTable, 'T');  /*DEBUG*/
+                    addSymbol(stat -> symbolTable, stat-> DC , symbol, Data, Empty, stat);
+                    /*printList(stat -> symbolTable, 'T'); */ /*DEBUG*/
                 }
                 parseData(line, instType, stat);/*return 0 if data is wrong or None*/
             }
@@ -107,26 +74,23 @@ void firstPass(FILE* inputFile , STATUS* stat){
                 do_nothing();
             }/*end if ( instType == Extern )*/
             if ( instType == Extern ){
+                /*fprintf(stderr,"[EXTERN] line after extern: --|%s|--\n",line);*/
                 if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes )){
                     printf("[WARNING]  line#%d: Label definition before .extern instruction", stat -> lineNumber);/*NOT ERROR*/
-                    /*addSymbol(stat -> symbolTable, 0 , line , Empty, Extern);*/ /*DEBUG -wrong code*/
-                    printList(stat -> symbolTable, 'T');  /*DEBUG*/
+                    /*printList(stat -> symbolTable, 'T'); */ /*DEBUG*/
                     /*at this point what's left of line is the operand that passed the test of parseExtern*/
                 }
             }/*end if ( instType == Extern )*/
             /*********************************COMMAND CHECK**************************************/
             if ( instType == No ){/* meaning no instruction found- proceed to parsing command and operands*/
-                /*fprintf(stderr," [6] DEBUG firstpass3 - line# %d the rest of line: --|%s|--\n", stat-> lineNumber, line);*/
+
                 if (stat -> symbolFound == Yes){
-                    addSymbol(stat -> symbolTable, stat->IC , symbol,  Code, Empty);
-                /*fprintf(stderr," [7] DEBUG firstpass3 - line# %d the rest of line: --|%s|--\n", stat-> lineNumber, line);*/
-                    printList(stat -> symbolTable, 'T');  /*DEBUG*/
+                    addSymbol(stat -> symbolTable, stat->IC , symbol,  Code, Empty, stat);
+                    /*printList(stat -> symbolTable, 'T'); */ /*DEBUG*/
                 }
                 if (parseCommand(command, line,  stat) == Ok){
-                    /*fprintf(stderr," [8] DEBUG firstpass3 - line# %d the rest of line: --|%s|--\n", stat-> lineNumber, line);*/
-
-                    trimWhiteSpaces(&line[strlen(command)]); /*restart line from end of command*/
-                    /*fprintf(stderr," [9] DEBUG firstpass3 - line# %d the rest of line: --|%s|--\n", stat-> lineNumber, line);*/
+                    trimNchars(line, strlen(command)); /*restart line from end of instruction, which is empty if*/
+                    trimWhiteSpaces(line);
 
                     parseCommandOperands(line, stat);
                 }
@@ -162,8 +126,8 @@ void secondPass(FILE* inputFile, STATUS* stat){
             stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
               /*relevant to lines that begin with label definition*/
             if (strlen(symbol) > 0){
-                /*fprintf(stderr,"DEBUG secondPass - line# %d The symbol that was found is --|%s|--\n", stat-> lineNumber, symbol);*/
-                trimWhiteSpaces(&line[strlen(symbol)+1]);
+                trimNchars(line, strlen(symbol)+1); /*restart line from end of symbol, which is empty if*/
+                trimWhiteSpaces(line);
                 /*restart line from end of label, "+1" stand for the colon in the end*/
             }
             /**********************************INSTRUCTION CHECK***********************************/
@@ -171,9 +135,9 @@ void secondPass(FILE* inputFile, STATUS* stat){
 
             if ( instType != Error && instType != No ){
                 /*then need to cut off instruction and trim spaces from rest of line*/
-                trimWhiteSpaces(&line[strlen(instruction)]);
+                trimNchars(line, strlen(instruction)); /*restart line from end of symbol, which is empty if*/
+                trimWhiteSpaces(line);
                  /*restart line from end of instruction, which is empty if*/
-                /*fprintf(stderr,"DEBUG firstpass2 - line# %d The Istruction that was found is --|%s|--\n", stat-> lineNumber, instruction);*/
             } /*there was a problen in parsing*/
             if ( instType == Entry ){
                 if (parseEntry(line, stat) == Ok && (stat -> symbolFound == Yes ))
@@ -181,40 +145,58 @@ void secondPass(FILE* inputFile, STATUS* stat){
                     /*at this point what's left of line is the operand that passed the test of parseEntry*/
             }/*end if ( instType == Extern )*/
             /*********************************COMMAND CHECK**************************************/
-            if ( instType == No ){/* meaning no instruction found- proceed to parsing command and operands*/
-                fillMissingDetailsInCodeTable(stat);
-            }
+
         }/*end if not ignore*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
 
-        if (stat -> errorExists == No){
-            buildObjectFile(stat);
-            buildEntriesFile(stat);
-            buildExternalsFile(stat);
-        }
     }/*end while*/
+    /*I chose to do fill the missing info in another loop over the code image since it doesn't chande the complexity, and does improve readability*/
+    fillMissingDetailsInCodeTable(stat);
+/*
+    printf("SYMBOL TABLE\n");
+    printList(stat -> symbolTable, 'T');
 
+    printf("CODE TABLE\n");
+    printList(stat -> codeTable , 'N');
+
+    printf("DATA TABLE\n");
+    printList(stat -> dataTable , 'N');
+*/
+
+    if (stat -> errorExists == No){
+        buildOutputFiles(stat);
+    }
 }
 
 void fillMissingDetailsInCodeTable(STATUS* stat){
     /*At this point the Symbol table is full, the data*/
     Node* cursor = stat -> codeTable -> head;
     int currentAddress;
-    CODE_IMG* body = NULL;
+    CODE_IMG* codeBody = NULL;
     SYMBOL* symbol = NULL;
-    while (cursor != NULL){
+    while (cursor != NULL){/*Iterating on code image rows*/
         currentAddress = cursor -> keyNum;
-        body = getCodeImageBody(cursor); /*The bunch of fields of code image linked list  at this cursor locaion*/
-        symbol = lookupSymbol(stat -> symbolTable, body-> label); /*symbol points at the body of the symbol table link thatbelongs to the symbol at cursor location,if this location does not relate to a symbol, Null will be returned*/
-        if ( body-> label != NULL && symbol == NULL ){ /*any operand symbol should be found in the symbol table, thus error*/
-            stat -> errorExists = Yes;
-            return;
-        }
-        if ( body -> comment == Direct)
-            body -> code = symbol -> address;
+        codeBody = getCodeImageBody(cursor); /*The bunch of fields of code image linked list  at this cursor locaion*/
+        /*printf("[1][DEBUG] before fillMissing in codeImage  lineNumber: %d ,%d ,%s , %d ,%c \n",  codeBody -> lineNumber,cursor-> keyNum, codeBody-> label, codeBody -> code,codeBody ->ARE);*/
 
-        if ( body -> comment == Relative)
-            body -> code = (symbol-> address) - currentAddress;
+        symbol = lookupSymbol(stat -> symbolTable, codeBody -> label);/*symbol points at the body of the symbol table link thatbelongs to the symbol at cursor location,if this location does not relate to a symbol, Null will be returned*/
+
+        if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){ /*any operand symbol should be found in the symbol table, thus error*/
+            printf("[Error] line#%d: Symbol not defined --|%s|--\n", codeBody -> lineNumber, codeBody -> label);
+            activateErrorFlag(stat);
+        }
+
+        if ( codeBody -> ARE == FillLater){
+            if ( codeBody -> comment == Relative)
+                codeBody -> code = (symbol-> address) - currentAddress;
+            else if ( codeBody -> comment == Direct)
+                codeBody -> code = symbol -> address;
+
+            if (symbol -> attr2 == Extern )
+                codeBody -> ARE = E;
+            else codeBody -> ARE = R;
+        }
+        /*printf("[2][DEBUG] after fillMissing in codeImage  lineNumber: %d ,%d ,%s , %d ,%c \n",  codeBody -> lineNumber,cursor-> keyNum, codeBody-> label, codeBody -> code,codeBody ->ARE);*/
 
         cursor = cursor -> next;
     }

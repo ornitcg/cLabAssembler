@@ -21,7 +21,6 @@ typedef struct LinkedList {
 
 
 void appendNode(short keyNum, char* keyStr , void* body , LinkedList* ll);
-void printList(LinkedList* ll, char type);
 void killList(LinkedList* ll);
 LinkedList* linkedListInit(size_t body_size);
 
