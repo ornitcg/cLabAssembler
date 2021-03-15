@@ -11,7 +11,6 @@
 /* searches through the symbol table for a given label (symbol)
 if the labels is found, its other attributes are returnded with pointer
 otherwise , returns NULL*/
-
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
     Node* cursor = symbolTable -> head;
     while (cursor != NULL) {
@@ -32,14 +31,15 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> errorExists = No;  /*errors flag*/
     stat -> symbolFound = No;  /*symbols flag*/
     strcpy(stat -> fileName , fileName);
-    strcpy(stat -> label , EMPTY_STRING);
-    stat -> commandNumber = -1;
+    strcpy(stat -> label , EMPTY_STRING); /*to make it easier to fill in the missing details after the first pass*/
+    stat -> commandNumber = -1;  /**/
     stat -> srcOpAddressType = Empty;
     stat -> destOpAddressType = Empty;
     stat -> symbolTable = linkedListInit(sizeof(SYMBOL));            /*starting a linked list of Symbols*/
     stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
+
 Info activateErrorFlag(STATUS* stat){
     stat -> errorExists = Yes;
     return Error;
@@ -53,6 +53,7 @@ Info getAddressType(Info opType,STATUS* stat){
     return Error;/*this line was just necesary for compiler. this function assumes validity, thus no error messages*/
 }
 
+/* Resets part of the field in status struct, for every line of the input file*/
 void resetStatStructForLine(STATUS* stat){
     stat -> lineNumber ++;
     stat -> symbolFound = No;
@@ -62,41 +63,63 @@ void resetStatStructForLine(STATUS* stat){
     stat -> destOpAddressType = Empty;
 }
 
+void resetLineNumber(STATUS* stat){
+    stat -> lineNumber =1;
+}
+
+
+/* prints the keys of a linked LIST, used for debugging
+params:
+ll - pointer to linkedListInit
+type - char ('T' for text , 'N' for number) to
+define which type of key is relevant to the
+given linked list to print*/
 void printList(LinkedList* ll, char type){
     Node* cursor = ll->head;
     SYMBOL* symbody =NULL;
-
-    /*fprintf(stderr," [1] in printList\n");*/
 
     while (cursor != NULL){
 
         if (type == 'T'){
             symbody = getSymbolBody(cursor);
-            fprintf(stderr, "DEBUG -in printList key is %s The value id %d attr2 =",cursor -> keyStr, symbody -> address);
+            /*fprintf(stderr, "DEBUG -in printList key is %s The value id %d attr2 =",cursor -> keyStr, symbody -> address);*/
             printEnumName(symbody->attr2);
             printf("\n");
         }
         if (type == 'N')
-            fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> keyNum);
+            /*fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> keyNum);*/
         cursor = cursor -> next;
     }
 }
 
+/*
+Adds a symbol to symbolTable
+params: symbolTable - LinkedList pointer
+short address - the address of the symbol
+char* symbol - the label itself
+Info attr1 - attributes Data/Code
+Info attr2 - attributes Extern/Entry
+STATUS* stat - pointer to statust structure, for easy access to current line number in input
+*/
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat){
     SYMBOL body;
     if (lookupSymbol(symbolTable, symbol) != NULL){
-        /*fprintf(stderr,"[1] DEBUG parse symbol \n");*/
         printf("[Error] line# %d: Label %s is already in symbol table\n", stat -> lineNumber, symbol);
         activateErrorFlag(stat);
     }
-    /*fprintf(stderr," [1] DEBUG addSymbol - added --|%s|--\n", symbol);*/
     body.address = address;
     body.attr1 = attr1;
     body.attr2 = attr2;
     appendNode( 0 , symbol , &body, symbolTable);
 }
 
-
+/*
+Gets the bunch of fields of a SYMBOL structure
+params:
+Node* cursor -  pointer to head of symbolTable linkedList
+returns:
+SYMBOL* - pointer to the SYMBOL structure which is a field in Node
+*/
 SYMBOL* getSymbolBody (Node* cursor){
     return (SYMBOL*)(cursor -> body);
 }
@@ -114,9 +137,6 @@ void updateSymbolTable(STATUS* stat){
         cursor = cursor -> next;
     }
 }
-
-
-
 
 void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE){
     CODE_IMG body;

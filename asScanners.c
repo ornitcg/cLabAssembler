@@ -17,10 +17,8 @@
 
 void runAssembler(FILE* inputFile, char* fileName){
     STATUS stat;
-    /*fprintf(stderr,"%s\n",fileName);*/
     removeExtention(fileName);
     initStatus(&stat, fileName); /*to contain status details of current line*/
-    /*fprintf(stderr, "******** DEBUG - in runAssembler\n");*/
     firstPass(inputFile, &stat);
     fseek(inputFile,0,SEEK_SET);
     secondPass(inputFile, &stat);
@@ -38,13 +36,12 @@ void runAssembler(FILE* inputFile, char* fileName){
 */
 void firstPass(FILE* inputFile , STATUS* stat){
     /***********************************************DECLARATIONS***********************************************************/
-    char line[MAX_LINE] = EMPTY_STRING;        /*line of assembly code*/
-    char symbol[MAX_LABEL] = EMPTY_STRING;     /*to contain the label from line*/
+    char line[MAX_LINE] = EMPTY_STRING;                       /*line of assembly code*/
+    char symbol[MAX_LABEL] = EMPTY_STRING;                   /*to contain the label from line*/
     char instruction[MAX_INSTRUCTION]= EMPTY_STRING;         /*to contain the label from line*/
     char command[MAX_CMD_LEN]= EMPTY_STRING;                 /*to contain the label from line*/
-    Info instType;                             /*stands for instruction type*/
+    Info instType;                                           /*stands for instruction type*/
     /*********************************************************************************************************/
-    fprintf(stderr,"%d DEBUG  STARTING FIRST PASS\n", stat->lineNumber);
 
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
@@ -78,10 +75,8 @@ void firstPass(FILE* inputFile , STATUS* stat){
                 do_nothing();
             }/*end if ( instType == Extern )*/
             if ( instType == Extern ){
-                /*fprintf(stderr,"[EXTERN] line after extern: --|%s|--\n",line);*/
                 if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes )){
                     printf("[WARNING]  line#%d: Label definition before .extern instruction", stat -> lineNumber);/*NOT ERROR*/
-                    /*printList(stat -> symbolTable, 'T'); */ /*DEBUG*/
                     /*at this point what's left of line is the operand that passed the test of parseExtern*/
                 }
             }/*end if ( instType == Extern )*/
@@ -98,13 +93,12 @@ void firstPass(FILE* inputFile , STATUS* stat){
 
                     parseCommandOperands(line, stat);
                 }
-                /*fprintf(stderr," [10] DEBUG firstpass3 - line# %d the rest of line: --|%s|--\n", stat-> lineNumber, line);*/
-
             }
         }/*end if not ignore*/
-        fprintf(stderr," [DEBUG] line#%d  src: %c dest %c\n", stat -> lineNumber, stat-> srcOpAddressType,stat-> destOpAddressType );
-
+        /*fprintf(stderr," [DEBUG] line#%d  src: %c dest %c\n", stat -> lineNumber, stat-> srcOpAddressType,stat-> destOpAddressType );*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
+        fprintf(stderr," [DEBUG] line#Number promoted %d\n", stat -> lineNumber );
+
     }/*end while*/
     stat -> ICF = stat -> IC;
     stat ->  DCF = stat -> DC;
@@ -118,18 +112,18 @@ void firstPass(FILE* inputFile , STATUS* stat){
   returns: 1 if errors occured and 0 otherwise
 */
 void secondPass(FILE* inputFile, STATUS* stat){
-    char line[MAX_LINE] = EMPTY_STRING;        /*line of assembly code*/
-    char symbol[MAX_LABEL] = EMPTY_STRING;     /*to contain the label from line*/
-    char instruction[MAX_INSTRUCTION] = EMPTY_STRING;         /*to contain the label from line*/
+    char line[MAX_LINE] = EMPTY_STRING;                            /*line of assembly code*/
+    char symbol[MAX_LABEL] = EMPTY_STRING;                        /*to contain the label from line*/
+    char instruction[MAX_INSTRUCTION] = EMPTY_STRING;            /*to contain the label from line*/
     /*char command[MAX_CMD_LEN] = EMPTY_STRING; */                /*to contain the label from line*/
     Info instType;                             /*stands for instruction type*/
 
     /*********************************************************************************************************/
     fprintf(stderr," \n\n[DEBUG] SECOND PASS \n\n");
-
+    resetLineNumber(stat);
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
 
-        trimWhiteSpaces(line);        /*removes whitespaces from both ends and also the '\n' for each line read from file*/
+        trimWhiteSpaces(line);  /*removes whitespaces from both ends and also the '\n' for each line read from file*/
         /*fprintf(stderr,"\n\n");*/
         if (!toIgnore(line) ){
             /***********************************SYMBOL CHECK**************************************/
@@ -160,17 +154,18 @@ void secondPass(FILE* inputFile, STATUS* stat){
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
 
     }/*end while*/
-    /*I chose to do fill the missing info in another loop over the code image since it doesn't chande the complexity, and does improve readability*/
+    /*I chose to do fill the missing info in another loop over the code image
+    since it doesn't chande the complexity, and does improve readability*/
     fillMissingDetailsInCodeTable(stat);
 
-    printf("SYMBOL TABLE\n");
+    /*printf("SYMBOL TABLE\n");
     printList(stat -> symbolTable, 'T');
 
     printf("CODE TABLE\n");
     printList(stat -> codeTable , 'N');
 
     printf("DATA TABLE\n");
-    printList(stat -> dataTable , 'N');
+    printList(stat -> dataTable , 'N');*/
 
 }
 
@@ -183,15 +178,16 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
     while (cursor != NULL){/*Iterating on code image rows*/
         currentAddress = cursor -> keyNum;
         codeBody = getCodeImageBody(cursor); /*The bunch of fields of code image linked list  at this cursor locaion*/
-        /*printf("[1][DEBUG] before fillMissing in codeImage  lineNumber: %d ,%d ,%s , %d ,%c \n",  codeBody -> lineNumber,cursor-> keyNum, codeBody-> label, codeBody -> code,codeBody ->ARE);*/
 
-        symbol = lookupSymbol(stat -> symbolTable, codeBody -> label);/*symbol points at the body of the symbol table link thatbelongs to the symbol at cursor location,if this location does not relate to a symbol, Null will be returned*/
+        symbol = lookupSymbol(stat -> symbolTable, codeBody -> label);
+        /*symbol points at the body of the symbol table link thatbelongs to the symbol
+        at cursor location,if this location does not relate to a symbol, Null will be returned*/
 
-        if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){ /*any operand symbol should be found in the symbol table, thus error*/
+        if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){
+            /*any operand symbol should be found in the symbol table, thus error*/
             printf("[Error] line#%d: Symbol not defined --|%s|--\n", codeBody -> lineNumber, codeBody -> label);
             activateErrorFlag(stat);
         }
-
         if ( codeBody -> ARE == FillLater){
             if ( codeBody -> comment == Relative)
                 codeBody -> code = (symbol-> address) - currentAddress;
@@ -202,8 +198,6 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
                 codeBody -> ARE = E;
             else codeBody -> ARE = R;
         }
-        /*printf("[2][DEBUG] after fillMissing in codeImage  lineNumber: %d ,%d ,%s , %d ,%c \n",  codeBody -> lineNumber,cursor-> keyNum, codeBody-> label, codeBody -> code,codeBody ->ARE);*/
-
-        cursor = cursor -> next;
+            cursor = cursor -> next;
     }
 }

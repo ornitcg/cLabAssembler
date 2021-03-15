@@ -130,7 +130,7 @@ void addOperandWord(char* operand, Info opType, STATUS* stat){ /*opType is sourc
             addCode(stat -> codeTable, (stat -> IC)++ /*address value*/ ,stat->lineNumber, addressType /*Immediate...*/, operand /*label*/, 0/*word*/ , FillLater/*ARE*/);
 
         else if (addressType == Immediate || addressType == Register ){
-            fprintf(stderr,"in addOperandWord the Immediate or register operand is: %s\n",operand);
+            /*fprintf(stderr,"[DEBUG]in addOperandWord the Immediate or register operand is: %s\n",operand);*/
             opWord = wordValueOfNoneLabelOperand(operand ,  addressType);
             addCode(stat -> codeTable, (stat -> IC)++/*address value*/, stat->lineNumber , Empty/*addressType not interesting*/ , EMPTY_STRING /*label*/ , opWord , A);
 

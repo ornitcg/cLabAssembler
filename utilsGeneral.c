@@ -16,18 +16,16 @@ char* fileName : the name of the file to be tested if validFile
 FILE* validFile(char* fileName, char* extention){
     FILE* file = NULL;
     char* findExtention  = strchr(fileName,'.');
-    fprintf(stderr,"[DEBUG1] - in isValidFile  fileName %s\n", fileName);
-    fprintf(stderr,"[DEBUG1] - in isValidFile  extention %s\n", extention);
+    char tmpName[FILENAME_MAX];
 
     if (findExtention != NULL ){
       fprintf(stderr,"[Error] - in file name %s\n", fileName);
       return NULL;
     }
-
-    strcat(fileName,extention);
-    file = fopen(fileName,"r");
+    sprintf(tmpName,"%s%s",fileName,extention);
+    file = fopen(tmpName,"r");
     if (file == NULL)
-      fprintf(stderr,"[Error] - cannot open the file %s\n", fileName);
+      fprintf(stderr,"[Error] - cannot open the file %s\n", tmpName);
     return file;
 }
 
@@ -50,7 +48,6 @@ void trimWhiteSpaces(char* string){
     char strP[MAX_STR] = EMPTY_STRING;
     char* tmpStr = strP;
     strcpy(strP,string);
-    /*fprintf(stderr,"[1] DEBUG trimwhitespaces instruction--|%s|--\n", string);*/
 
     if (strlen(tmpStr) == 0 )
       return;
@@ -64,12 +61,8 @@ void trimWhiteSpaces(char* string){
       tmpStr[last] = '\0';
       last--;
     }
-
     strcpy(string, EMPTY_STRING);
     strcpy(string, tmpStr);
-
-    /*fprintf(stderr,"[2][DEBUG] in trimWhiteSpaces , string is --|%s|--\n",string);*/
-
 }
 
 
@@ -77,20 +70,15 @@ void trimNchars(char* line,int numChars){
     char tmpStr[MAX_STR] = EMPTY_STRING;
     char* strP = tmpStr;
     strcpy(strP,line);
-    /*fprintf(stderr,"[1] DEBUG trimNchars --|%s|--\n", line);*/
 
     if (strlen(strP) == 0)
         return;
 
     strP += numChars;
-
     strcpy(line, EMPTY_STRING);
     strcpy(line, strP);
-
-    /*fprintf(stderr,"[2][DEBUG] in trimWhiteSpaces , string is --|%s|--\n",string);*/
-
-
 }
+
 int isEmptyString(char* string){
     if (strlen(string)==0)
         return YES;
@@ -104,6 +92,7 @@ int externalCommas(char* line){
             return YES;
     return NO;
 }
+
 /*
 Checks if a charachter is a space or tab
 params: char c- the charachter to check
@@ -118,8 +107,8 @@ int isWhiteSpace(char c){
 int firstPosOfChar(char* string, char targetChar){
     int pos = 0;
     while (string[pos] != '\0'){
-        if (targetChar == WHITE_SPACE){ /* WHITESPACE is used here for readability, the function
-        isWhiteSpace does the full check of whitespaces*/
+        if (targetChar == WHITE_SPACE){
+        /* WHITESPACE is used here for readability, the function isWhiteSpace does the full check of whitespaces*/
             if (isWhiteSpace(string[pos]))
                 return pos;
         }
@@ -139,18 +128,17 @@ short shortToTwelveBits(short code){
     return (code & mask);
 }
 
-
+/* Removes the extention from a fileName, if there is an extention*/
 void removeExtention(char* fileName){
     fileName[firstPosOfChar(fileName,EXTENTION_IDENTIFIER)]='\0';
 }
 
-
+/**/
 void toBinaryString(short source, char* final){
     char dest[12] = "000000000000";
-
     int len =strlen(dest);
     int ind=len-1;
-    /*fprintf(stderr,"destination string: %s destlen: %d  source: %d\n",dest,len, source);*/
+
     while ((source/2) >0 ){
         if ((source%2) ==0)
             dest[ind] = '0' ;

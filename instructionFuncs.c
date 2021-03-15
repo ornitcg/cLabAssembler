@@ -27,7 +27,6 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
         if (strcmp(instruction, ".entry") == 0) return Entry;
         printf("line#%d: Error - Invalid instruction name\n", stat->lineNumber);
         activateErrorFlag(stat);
-        /*strcpy(instruction, EMPTY_STRING);*/
         return Error;
     }
     /*if ther is no INSTRUCTION_IDENTIFIER, it can be a command so it's not necesarily an error*/
@@ -62,17 +61,11 @@ Info parseStringData(char* string, STATUS* stat){
         string++;
 
         while(string[0]!= '\0'){
-
             addData(stat -> dataTable, stat -> DC , string[0] ,'A');
-            /*fprintf(stderr,"[DEBUG] in parse string data printing list after addition of data %c at DC %d\n", string[0],stat -> DC );*/
-            /*printList(stat -> dataTable, 'N');*//*DEBUG*/
-
             (stat -> DC)++;
             string++;
         }
-
         addData(stat -> dataTable, stat -> DC , '\0' ,'A');
-
         (stat -> DC)++;
         return String; /*reminder: String is of info type. empty string is acceptable*/
     }

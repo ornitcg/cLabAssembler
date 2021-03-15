@@ -104,10 +104,10 @@ assuming the input is correct
 */
 short  buildFirstWord(short opcode, short funct, short src, short dest){
   signed short  res;
-  fprintf(stderr, "opcode: %d funct: %d src: %d dest: %d\n", opcode, funct,src,dest);
+  /*fprintf(stderr, "[DEBUG] opcode: %d funct: %d src: %d dest: %d\n", opcode, funct,src,dest);*/
   if (src >0 ) src -=48; /*if not zero; received as char*/
   if (dest >0 )dest -=48; /*if not zero; received as char*/
-  fprintf(stderr, "opcode: %d funct: %d src: %d dest: %d\n", opcode, funct,src,dest);
+  /*fprintf(stderr, "[DEBUG] opcode: %d funct: %d src: %d dest: %d\n", opcode, funct,src,dest);*/
 
   src = src << 2;
   funct = funct << 4;
@@ -147,7 +147,7 @@ short wordValueOfNoneLabelOperand(char* operand, Info addressType){
     short word;
     if (addressType == Immediate){
         word =  (short)atoi(operand);
-        fprintf(stderr,"[DEBUG] in wordValueOfNoneLabelOperand Immediate value is: %d\n", word);
+        /*fprintf(stderr,"[DEBUG] in wordValueOfNoneLabelOperand Immediate value is: %d\n", word);*/
     }
     if (addressType == Register)
         word = 1 << (lookupRegister(operand));

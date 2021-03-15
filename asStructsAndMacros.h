@@ -41,6 +41,7 @@ typedef struct STATUS{
 
 void initStatus(STATUS* stat, char* fileName);
 void resetStatStructForLine(STATUS* stat);
+void resetLineNumber(STATUS* stat);
 Info activateErrorFlag(STATUS* stat);
 Info getAddressType(Info opType,STATUS* stat);
 void freeMemory(STATUS* stat);

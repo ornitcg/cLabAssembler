@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
 
   for(i= 1 ; i < argc ; i++){
       fileName = argv[i];
-      fprintf(stderr,"[DEBUG] - in assembler  fileName %s  %s\n",argv[i], fileName);
   }
   fprintf(stderr,"DEBUG\n\n");
 
@@ -38,13 +37,13 @@ int main(int argc, char *argv[]) {
 
     inputFile = validFile(fileName, EXT_AS);  /*input file contains a pointer to the opened file*/
     if (inputFile != NULL) {
-        /*fprintf(stderr, "******** DEBUG - starting runAssembler\n");*/
+        fprintf(stderr, "******** DEBUG - starting runAssembler for file %s\n\n",fileName);
 
-        /*runAssembler(inputFile, fileName);*/
-        /*fprintf(stderr, "******** DEBUG - done runAssembler\n");*/
+        runAssembler(inputFile, fileName);
 
         fclose(inputFile);
     }
+    fprintf(stderr, "******** DEBUG - done main\n");
 
   }
   fprintf(stderr,"DEBUG\n\n");
