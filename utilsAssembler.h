@@ -5,7 +5,7 @@
 #define EXT_AS ".as"
 
 /*Info contains a bunch of word that are helpfull for readability*/
-enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative ='2' , Register ='3' ,Error = -1, No, Yes, Ok, Source, Target, Code , Data, String,  Entry , Extern , Empty  , FillLater ='?' };
+enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative ='2' , Register ='3' ,Error = -1, No =0, Yes=1, Ok=2, Source=3, Dest=4, Code =5, Data=6, String=7,  Entry=8 , Extern=9 , Empty = '_'  , FillLater ='?' };
 
 typedef enum Info Info;
 

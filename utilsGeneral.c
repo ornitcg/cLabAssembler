@@ -16,15 +16,18 @@ char* fileName : the name of the file to be tested if validFile
 FILE* validFile(char* fileName, char* extention){
     FILE* file = NULL;
     char* findExtention  = strchr(fileName,'.');
+    fprintf(stderr,"[DEBUG1] - in isValidFile  fileName %s\n", fileName);
+    fprintf(stderr,"[DEBUG1] - in isValidFile  extention %s\n", extention);
 
     if (findExtention != NULL ){
-      fprintf(stderr,"Error - in file name %s\n", fileName);
+      fprintf(stderr,"[Error] - in file name %s\n", fileName);
       return NULL;
     }
-    fileName = strcat(fileName,extention);
+
+    strcat(fileName,extention);
     file = fopen(fileName,"r");
     if (file == NULL)
-      fprintf(stderr,"Error - cannot open the file %s\n", fileName);
+      fprintf(stderr,"[Error] - cannot open the file %s\n", fileName);
     return file;
 }
 
@@ -131,8 +134,37 @@ void emptyString(char* string){
     string[0] = '\0';
 }
 
+short shortToTwelveBits(short code){
+    short mask = ((unsigned short)(-1)) >> 4;
+    return (code & mask);
+}
 
 
+void removeExtention(char* fileName){
+    fileName[firstPosOfChar(fileName,EXTENTION_IDENTIFIER)]='\0';
+}
+
+
+void toBinaryString(short source, char* final){
+    char dest[12] = "000000000000";
+
+    int len =strlen(dest);
+    int ind=len-1;
+    /*fprintf(stderr,"destination string: %s destlen: %d  source: %d\n",dest,len, source);*/
+    while ((source/2) >0 ){
+        if ((source%2) ==0)
+            dest[ind] = '0' ;
+        else dest[ind] = '1' ;
+        source=(source/2);
+        ind--;
+    }
+    if ((source%2) ==0)
+        dest[ind] = '0' ;
+    else dest[ind] = '1' ;
+    strcpy(final,dest);
+
+
+}
 
 void do_nothing(){
 }

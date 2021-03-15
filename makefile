@@ -9,7 +9,7 @@ assembler.o: assembler.c  asStructsAndMacros.h asScanners.h
 asScanners.o: asScanners.c asScanners.h utilsAssembler.h asStructsAndMacros.h linkedList.h utilsGeneral.h symbolFuncs.h instructionFuncs.h commandFuncs.h buildOutput.h
 	gcc -ansi -g -Wall -pedantic -c asScanners.c
 
-buildOutput.o: buildOutput.c buildOutput.h asStructsAndMacros.h
+buildOutput.o: buildOutput.c buildOutput.h asStructsAndMacros.h 
 	gcc -ansi -g -Wall -pedantic -c buildOutput.c
 
 utilsAssembler.o: utilsAssembler.c utilsGeneral.h utilsAssembler.h asStructsAndMacros.h

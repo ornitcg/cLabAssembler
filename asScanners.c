@@ -18,12 +18,16 @@
 void runAssembler(FILE* inputFile, char* fileName){
     STATUS stat;
     /*fprintf(stderr,"%s\n",fileName);*/
-    fileName[firstPosOfChar(fileName,EXTENTION_IDENTIFIER)]='\0';
+    removeExtention(fileName);
     initStatus(&stat, fileName); /*to contain status details of current line*/
     /*fprintf(stderr, "******** DEBUG - in runAssembler\n");*/
     firstPass(inputFile, &stat);
     fseek(inputFile,0,SEEK_SET);
     secondPass(inputFile, &stat);
+
+    if (stat.errorExists == No)
+        buildOutputFiles(&stat);
+
     freeMemory(&stat);
 }
 
@@ -44,8 +48,8 @@ void firstPass(FILE* inputFile , STATUS* stat){
 
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-        /*fprintf(stderr," [DEBUG] line#%d  line string: --|%s|--\n", stat->lineNumber,line);
-        fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
+        fprintf(stderr," [DEBUG] line#%d  line string: --|%s|--\n", stat->lineNumber,line);
+        /*fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
             /***********************************SYMBOL CHECK**************************************/
@@ -98,6 +102,8 @@ void firstPass(FILE* inputFile , STATUS* stat){
 
             }
         }/*end if not ignore*/
+        fprintf(stderr," [DEBUG] line#%d  src: %c dest %c\n", stat -> lineNumber, stat-> srcOpAddressType,stat-> destOpAddressType );
+
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
     }/*end while*/
     stat -> ICF = stat -> IC;
@@ -106,7 +112,11 @@ void firstPass(FILE* inputFile , STATUS* stat){
 
 }/*end of firstPass*/
 
-
+/*
+  Performs the Second pass over the assembly file, and completes data on symbols
+  params: FILE* inputFile - pointer to the input assembly file
+  returns: 1 if errors occured and 0 otherwise
+*/
 void secondPass(FILE* inputFile, STATUS* stat){
     char line[MAX_LINE] = EMPTY_STRING;        /*line of assembly code*/
     char symbol[MAX_LABEL] = EMPTY_STRING;     /*to contain the label from line*/
@@ -152,7 +162,7 @@ void secondPass(FILE* inputFile, STATUS* stat){
     }/*end while*/
     /*I chose to do fill the missing info in another loop over the code image since it doesn't chande the complexity, and does improve readability*/
     fillMissingDetailsInCodeTable(stat);
-/*
+
     printf("SYMBOL TABLE\n");
     printList(stat -> symbolTable, 'T');
 
@@ -161,11 +171,7 @@ void secondPass(FILE* inputFile, STATUS* stat){
 
     printf("DATA TABLE\n");
     printList(stat -> dataTable , 'N');
-*/
 
-    if (stat -> errorExists == No){
-        buildOutputFiles(stat);
-    }
 }
 
 void fillMissingDetailsInCodeTable(STATUS* stat){

@@ -35,7 +35,7 @@ void initStatus(STATUS* stat, char* fileName){
     strcpy(stat -> label , EMPTY_STRING);
     stat -> commandNumber = -1;
     stat -> srcOpAddressType = Empty;
-    stat -> targetOpAddressType = Empty;
+    stat -> destOpAddressType = Empty;
     stat -> symbolTable = linkedListInit(sizeof(SYMBOL));            /*starting a linked list of Symbols*/
     stat -> codeTable = linkedListInit(sizeof(CODE_IMG));            /*starting a linked list of code image*/
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
@@ -48,8 +48,8 @@ Info activateErrorFlag(STATUS* stat){
 Info getAddressType(Info opType,STATUS* stat){
     if (opType == Source)
         return stat -> srcOpAddressType;
-    if (opType == Target)
-        return stat -> targetOpAddressType;
+    if (opType == Dest)
+        return stat -> destOpAddressType;
     return Error;/*this line was just necesary for compiler. this function assumes validity, thus no error messages*/
 }
 
@@ -59,7 +59,7 @@ void resetStatStructForLine(STATUS* stat){
     strcpy(stat -> label , EMPTY_STRING);
     stat -> commandNumber = -1;
     stat -> srcOpAddressType = Empty;
-    stat -> targetOpAddressType = Empty;
+    stat -> destOpAddressType = Empty;
 }
 
 void printList(LinkedList* ll, char type){

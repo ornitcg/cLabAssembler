@@ -72,9 +72,6 @@ Info parseStringData(char* string, STATUS* stat){
         }
 
         addData(stat -> dataTable, stat -> DC , '\0' ,'A');
-        /*fprintf(stderr,"[DEBUG] in parse string data printing list after addition of data %c at DC %d\n", '\0',stat -> DC);*/
-
-        /*printList(stat -> dataTable, 'N');*//*DEBUG*/
 
         (stat -> DC)++;
         return String; /*reminder: String is of info type. empty string is acceptable*/
@@ -175,7 +172,6 @@ Info parseNumbersData(char* line, STATUS* stat){
             dataString[cursor] = '\0';
             trimWhiteSpaces(dataString); /*trim whitespaces from the piece of datastring*/
             trimNchars(line, cursor+1); /*remove the data string piece from line*/
-
         }
         else {
                 strcpy(dataString, line);
