@@ -8,8 +8,16 @@ and not dependent on assembler related files.
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "utilsGeneral.h"
 
+
+void checkNumOfCommandLineArgs(int argc){
+    if (argc == 1){
+      printf("[Error] - no arguments found\n");
+      exit(EXIT_FAILURE);
+    }
+}
 
 /*
 Checks if the file name is valid and if it can be opened

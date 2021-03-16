@@ -14,7 +14,7 @@
 
 #define MAX_STR 81
 
-
+void checkNumOfCommandLineArgs(int argc);
 
 /*
 Checks if the file name is valid and if it can be opened

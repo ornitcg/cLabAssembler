@@ -32,6 +32,7 @@ typedef struct STATUS{
     unsigned int ICF;
     unsigned int DCF;
     int lineNumber;
+    Info errorForLine; /*YES/NO*/
     Info errorExists; /*YES/NO*/
     Info symbolFound; /*YES/NO*/
     char fileName[FILENAME_MAX];
@@ -62,6 +63,12 @@ void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1,
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 void updateSymbolTable(STATUS* stat);
 SYMBOL* getSymbolBody (Node* cursor);
+
+
+/*updates the data table so that every
+data symbol is given a shift at the size of ICF
+params: STATUS* stat - for easy access to status info
+ */
 void updateDataTable(STATUS* stat);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
@@ -75,13 +82,18 @@ typedef struct CODE_IMG {
 void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE);
 CODE_IMG* getCodeImageBody (Node* cursor);
 /*********************************************DATA TABLE*******************************************************/
-typedef struct DATA_IMG {
+/*typedef struct DATA_IMG {
     short data;
     Info ARE;
 } DATA_IMG;
+void addData(LinkedList* dataTable, short address, short data, Info ARE);*/
 
-void addData(LinkedList* dataTable, short address, short data, Info ARE);
+typedef short  DATA_IMG;
+
+void addData(LinkedList* dataTable, short address, short data);
 DATA_IMG* getDataImageBody (Node* cursor);
+
+
 /*****************************************COMMAND (x) TABLE*********************************************/
 
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/
@@ -93,7 +105,6 @@ typedef char reservedArr[5][MAX_LABEL] ; /*for array of registers names*/
 #define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}
 /*#define char otherReserved*/
 /*****************************************COMMAND (x) TABLE*********************************************/
-void printList(LinkedList* ll, char type);
 
 /*This is the table of 16 commands, to be defined int the first pass function using macro*/
 typedef struct CMD{

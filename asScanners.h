@@ -9,10 +9,16 @@
 void firstScan(FILE* inputFile , STATUS* stat);
 void secondScan(FILE* inputFile, STATUS* stat);
 void runAssembler(FILE* inputFile, char* fileName);
-/*updates the data table so that every
-data symbol is given a shift at the size of ICF
-params: int ICF -  the size to add to data symbols
-        data table - to be updated with ICF
- */
 
+
+
+
+
+
+/*
+Scans the codeTable for missing data and fills in where valid.
+prints out error messages for errors found that are relevant to second pass
+params:
+STATUS* stat - pointer to status, for easy access to all info
+*/
 void fillMissingDetailsInCodeTable(STATUS* stat);

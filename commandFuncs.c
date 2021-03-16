@@ -226,7 +226,7 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
 
     /*now check if op type is allowed for use at this location in command*/
     if (opNumAllowed == 1 || opType == Dest)
-        res = firstPosOfChar(cmd[cmdIndex].opDest, addressType); /*addressType represents the charachters 0/1/2/3 */
+        res = firstPosOfChar(cmd[cmdIndex].opDest, addressType); /*addressType represents the characters 0/1/2/3 */
     else if (opType == Source)
         res = firstPosOfChar(cmd[cmdIndex].opSrc, addressType);
     if (res == NOT_FOUND){
@@ -238,7 +238,7 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
 
 /*gets an operand string and finds its addressing type
 (immediate, direct, relative, register),
-returns enum Addressing  type as charachters.
+returns enum Addressing  type as characters.
 returns 'Error' if operand is not one of any type
 if not Error, the value of the operand as a word, is returned via opWord parameter*/
 Info operandAddressType(char* operand,  STATUS* stat){

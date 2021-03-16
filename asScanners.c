@@ -30,12 +30,13 @@ void firstScan(FILE* inputFile , STATUS* stat){
 
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-        /*fprintf(stderr," [DEBUG] line#%d  line string: --|%s|--\n", stat->lineNumber,line);*/
+        /*fprintf(stderr," [DEBUG] firstScan line#%d  line string: --|%s|--\n", stat->lineNumber,line);*/
         /*fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
             /***********************************SYMBOL CHECK**************************************/
             stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
+
               /*relevant to lines that begin with label definition*/
             if (strlen(symbol) > 0) {
                 trimNchars(line, strlen(symbol)+1); /*restart line from end of symbol, which is empty if*/
@@ -43,38 +44,40 @@ void firstScan(FILE* inputFile , STATUS* stat){
                 /*restart line from end of label, "+1" stand for the colon in the end*/
             }
             /**********************************INSTRUCTION CHECK***********************************/
-            instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
+            if (stat -> errorForLine == No){
+                instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
 
-            if ( instType != Error && instType != No ){
-            /*then need to cut off instruction and trim spaces from rest of line*/
-                trimNchars(line, strlen(instruction)); /*restart line from end of instruction, which is empty if*/
-                trimWhiteSpaces(line);
-            } /*else there was a problem in finding a command*/
-            if  ( instType == Data || instType == String ){
-                if (stat -> symbolFound == Yes){
-                    addSymbol(stat -> symbolTable, stat-> DC , symbol, Data, Empty, stat);
-                }
-                parseData(line, instType, stat);/*return 0 if data is wrong or None*/
-            }
-                /*if  instType == Entry do nothing*/
-            if ( instType == Extern )
-                if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                    printf("[WARNING] File: %s.as line#%d: Label definition before .extern instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
-                    /*at this point what's left of line is the operand that passed the test of parseExtern*/
-
-            /*********************************COMMAND CHECK**************************************/
-            if ( instType == No ){/* meaning no instruction found- proceed to parsing command and operands*/
-
-                if (stat -> symbolFound == Yes){
-                    addSymbol(stat -> symbolTable, stat->IC , symbol,  Code, Empty, stat);
-                    /*printList(stat -> symbolTable, 'T'); */ /*DEBUG*/
-                }
-                if (parseCommand(command, line,  stat) == Ok){
-                    trimNchars(line, strlen(command)); /*restart line from end of instruction, which is empty if*/
+                if ( instType != Error && instType != No ){
+                /*then need to cut off instruction and trim spaces from rest of line*/
+                    trimNchars(line, strlen(instruction)); /*restart line from end of instruction, which is empty if*/
                     trimWhiteSpaces(line);
-                    parseCommandOperands(line, stat);
+                } /*else there was a problem in finding a command*/
+                if  ( instType == Data || instType == String ){
+                    if (stat -> symbolFound == Yes){
+                        addSymbol(stat -> symbolTable, stat-> DC , symbol, Data, Empty, stat);
+                    }
+                    parseData(line, instType, stat);/*return 0 if data is wrong or None*/
                 }
-            }/*end if (instType == No) */
+                    /*if  instType == Entry do nothing*/
+                if ( instType == Extern )
+                    if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
+                        printf("[WARNING][File: %s.as line#%d]: Label definition before .extern instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
+                        /*at this point what's left of line is the operand that passed the test of parseExtern*/
+
+                /*********************************COMMAND CHECK**************************************/
+                if ( stat -> errorForLine == No && instType == No ){
+                    /* meaning no instruction found- proceed to parsing command and operands*/
+
+                    if (stat -> symbolFound == Yes)
+                        addSymbol(stat -> symbolTable, stat->IC , symbol,  Code, Empty, stat);
+
+                    if (parseCommand(command, line,  stat) == Ok){
+                        trimNchars(line, strlen(command)); /*restart line from end of instruction, which is empty if*/
+                        trimWhiteSpaces(line);
+                        parseCommandOperands(line, stat);
+                    }
+                    }/*end if (instType == No) */
+            }
         }/*end if not ignore*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
     }/*end while*/
@@ -82,7 +85,7 @@ void firstScan(FILE* inputFile , STATUS* stat){
     stat ->  DCF = stat -> DC;
     updateSymbolTable(stat);
 
-}/*end of firstPass*/
+}/*end of firstScan*/
 
 
 
@@ -120,13 +123,14 @@ void secondScan(FILE* inputFile, STATUS* stat){
             } /*there was a problen in parsing*/
             if ( instType == Entry )
                 if (parseEntry(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                    printf("[WARNING] File: %s.as line#%d: Label definition before .entry instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
+                    printf("[WARNING][File: %s.as line#%d]: Label definition before .entry instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
                     /*at this point what's left of line is the operand that passed the test of parseEntry*/
         }/*end if not ignore*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
     }/*end while*/
     /* I chose to  fill the missing info in another loop over the code image
     since it doesn't chande the complexity, and does improve readability*/
+
     fillMissingDetailsInCodeTable(stat);
 
 }/* end of secondPass*/
@@ -149,24 +153,25 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
     while (cursor != NULL){/*Iterating on code image rows*/
         currentAddress = cursor -> keyNum;
         codeBody = getCodeImageBody(cursor); /*The bunch of fields of code image linked list  at this cursor locaion*/
-
         symbol = lookupSymbol(stat -> symbolTable, codeBody -> label);
         /*symbol points at the body of the symbol table link thatbelongs to the symbol
         at cursor location,if this location does not relate to a symbol, Null will be returned*/
 
         if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){
             /*any operand symbol should be found in the symbol table, thus error*/
-            printf("[Error] File: %s.as line#%d: Symbol not defined \n", stat-> fileName , codeBody -> lineNumber);
+            printf("[Error][File: %s.as line#%d]: Symbol not defined \n", stat-> fileName , codeBody -> lineNumber);
             activateErrorFlag(stat);
         }
-        if ( codeBody -> ARE == FillLater){ /* Find the relevant places to fill in*/
+        if ( symbol!= NULL && codeBody -> ARE == FillLater){ /* Find the relevant places to fill in*/
 
             if ( codeBody -> comment == Relative){
+
                 if(symbol-> attr2==Extern){
-                    printf("[Error] File: %s.as line#%d: Extern symbol cannot be assigned as relative address.\n", stat-> fileName , codeBody -> lineNumber);
+                    printf("[Error][File: %s.as line#%d]: Extern symbol cannot be assigned as relative address.\n", stat-> fileName , codeBody -> lineNumber);
                     activateErrorFlag(stat);
                 }
-                else codeBody -> code = (symbol-> address) - currentAddress; /* The calculation value  of distance for relative addressing operand*/
+                else codeBody -> code = (symbol-> address) - currentAddress;
+                /* The calculation value  of distance for relative addressing operand*/
             }
 
             else if ( codeBody -> comment == Direct)

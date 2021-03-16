@@ -47,6 +47,9 @@ void parseData(char* line, Info type, STATUS* stat){
         parseNumbersData(line, stat);
 }
 
+
+
+
 Info parseStringData(char* string, STATUS* stat){
     int strEndInd;
     if (strlen(string) ==0){
@@ -61,11 +64,11 @@ Info parseStringData(char* string, STATUS* stat){
         string++;
 
         while(string[0]!= '\0'){
-            addData(stat -> dataTable, stat -> DC , string[0] ,'A');
+            addData(stat -> dataTable, stat -> DC , string[0] );
             (stat -> DC)++;
             string++;
         }
-        addData(stat -> dataTable, stat -> DC , '\0' ,'A');
+        addData(stat -> dataTable, stat -> DC , '\0');
         (stat -> DC)++;
         return String; /*reminder: String is of info type. empty string is acceptable*/
     }
@@ -155,13 +158,14 @@ Info parseNumbersData(char* line, STATUS* stat){
     int cursor = 0;
     short data;
     char dataString[MAX_LINE];
+    /*fprintf(stderr,"[DEBUG] in parsedata --%s--\n",line);*/
 
     while (line[0] != '\0'){
         trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
 
         if (externalCommas(line)){
             printErrorWithLocation(stat, "Invalid commas");
-            return Error;
+            return activateErrorFlag(stat);
         }
         cursor =  firstPosOfChar(line, COMMA); /*find the first colon position returns -1 if no comma found*/
         if (cursor != NOT_FOUND) { /*case comma found in data */
@@ -170,10 +174,15 @@ Info parseNumbersData(char* line, STATUS* stat){
             trimWhiteSpaces(dataString); /*trim whitespaces from the piece of datastring*/
             trimNchars(line, cursor+1); /*remove the data string piece from line*/
         }
-        else {
+        else { /*case no commas in rest of line*/
                 strcpy(dataString, line);
-                line[0] = '\0';
+                emptyString(line);
             }
+        if (isEmptyString(dataString) == Yes){
+            printErrorWithLocation(stat, "Missing paramerer(s) for data");
+            return activateErrorFlag(stat);
+        }
+
         /*now we have a dataString that is supposed to be a data item*/
         if (isValidAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
             if (firstPosOfChar(dataString, DECIMAL_POINT) != NOT_FOUND){
@@ -182,7 +191,7 @@ Info parseNumbersData(char* line, STATUS* stat){
             }
             data = atoi(dataString); /*invert string to number*/
             if (validInWordRange(data) == YES){
-                addData(stat -> dataTable ,stat -> DC , data, 'A'); /*add data to data image*/
+                addData(stat -> dataTable ,stat -> DC , data); /*add data to data image*/
                 (stat -> DC)++;
             }
             else{

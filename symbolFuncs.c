@@ -19,7 +19,15 @@ int containsLabelDef(char* line){
   return NO;
 }
 
-/* returns Yes/No/Error*/
+/*
+Finds a definition of symbol at beggining of line.
+params:
+char* symbol - to collect the symbol defined in line, if found, otherwise, stays empty.
+char* line - the line to search within.
+STATUS* stat - for easy access to status info at error messages
+returns:
+
+returns Yes/No/Error*/
 Info parseSymbol(char* symbol , char* line, STATUS* stat){
     int cursor = 0;
     char tmpSymbol[MAX_LINE] = EMPTY_STRING;
@@ -35,10 +43,16 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
         strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
         return Yes ;
     }
+
     return activateErrorFlag(stat);
 }
 
-
+/*
+Checks if symbol characters are all valid.
+params: char* symbol - the symbol to check
+returns: int - Yes if symbol contains invalid symbol
+and No otherwise
+*/
 int validSymbolChars(char* symbol){ /*OK*/
     int cursor = 0;
     char c;
@@ -57,18 +71,28 @@ int validSymbolChars(char* symbol){ /*OK*/
 }
 
 
+
+
+/*
+Checks if a given string is valid as a symbol.
+params:
+char* string - the string to check if valid as symbol
+STATUS* stat - for easy access to status info used in error messages
+returns: Info type - Yes if string is valid as symbol, and Error otherwise
+*/
 Info isValidAsSymbol(char* string, STATUS* stat){
+
     if (strlen(string) > MAX_LABEL){
         printErrorWithLocation(stat, "Label is too long");
-        return Error;
+        return activateErrorFlag(stat);
     }
     if (!validSymbolChars(string)){
-        printf("[Error] line# %d: Invalid charachters in label --|%s|-- \n",  stat -> lineNumber, string);
-        return Error;
+        printErrorWithLocation(stat, "Invalid characters in label");
+        return activateErrorFlag(stat);
     }
     if (isReservedWord(string) == Yes){
-        printf("[Error] line# %d: Used reserved word for label \n",  stat -> lineNumber);
-        return Error;
+        printErrorWithLocation(stat , "Used reserved word for label");
+        return activateErrorFlag(stat);
     }
     return Yes;
 }
