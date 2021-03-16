@@ -14,27 +14,12 @@
 #include "buildOutput.h"
 
 
-
-void runAssembler(FILE* inputFile, char* fileName){
-    STATUS stat;
-    removeExtention(fileName);
-    initStatus(&stat, fileName); /*to contain status details of current line*/
-    firstPass(inputFile, &stat);
-    fseek(inputFile,0,SEEK_SET);
-    secondPass(inputFile, &stat);
-
-    if (stat.errorExists == No)
-        buildOutputFiles(&stat);
-
-    freeMemory(&stat);
-}
-
 /*
   Performs the first pass over the assembly file
   params: FILE* inputFile - pointer to the input assembly file
   returns: 1 if errors occured and 0 otherwise
 */
-void firstPass(FILE* inputFile , STATUS* stat){
+void firstScan(FILE* inputFile , STATUS* stat){
     /***********************************************DECLARATIONS***********************************************************/
     char line[MAX_LINE] = EMPTY_STRING;                       /*line of assembly code*/
     char symbol[MAX_LABEL] = EMPTY_STRING;                   /*to contain the label from line*/
@@ -45,7 +30,7 @@ void firstPass(FILE* inputFile , STATUS* stat){
 
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-        fprintf(stderr," [DEBUG] line#%d  line string: --|%s|--\n", stat->lineNumber,line);
+        /*fprintf(stderr," [DEBUG] line#%d  line string: --|%s|--\n", stat->lineNumber,line);*/
         /*fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
@@ -60,26 +45,23 @@ void firstPass(FILE* inputFile , STATUS* stat){
             /**********************************INSTRUCTION CHECK***********************************/
             instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
 
-            if ( instType != Error && instType != No ){ /*then need to cut off instruction and trim spaces from rest of line*/
+            if ( instType != Error && instType != No ){
+            /*then need to cut off instruction and trim spaces from rest of line*/
                 trimNchars(line, strlen(instruction)); /*restart line from end of instruction, which is empty if*/
                 trimWhiteSpaces(line);
             } /*else there was a problem in finding a command*/
             if  ( instType == Data || instType == String ){
                 if (stat -> symbolFound == Yes){
                     addSymbol(stat -> symbolTable, stat-> DC , symbol, Data, Empty, stat);
-                    /*printList(stat -> symbolTable, 'T'); */ /*DEBUG*/
                 }
                 parseData(line, instType, stat);/*return 0 if data is wrong or None*/
             }
-            if ( instType == Entry ){
-                do_nothing();
-            }/*end if ( instType == Extern )*/
-            if ( instType == Extern ){
-                if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes )){
-                    printf("[WARNING]  line#%d: Label definition before .extern instruction", stat -> lineNumber);/*NOT ERROR*/
+                /*if  instType == Entry do nothing*/
+            if ( instType == Extern )
+                if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
+                    printf("[WARNING] File: %s.as line#%d: Label definition before .extern instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
                     /*at this point what's left of line is the operand that passed the test of parseExtern*/
-                }
-            }/*end if ( instType == Extern )*/
+
             /*********************************COMMAND CHECK**************************************/
             if ( instType == No ){/* meaning no instruction found- proceed to parsing command and operands*/
 
@@ -90,15 +72,11 @@ void firstPass(FILE* inputFile , STATUS* stat){
                 if (parseCommand(command, line,  stat) == Ok){
                     trimNchars(line, strlen(command)); /*restart line from end of instruction, which is empty if*/
                     trimWhiteSpaces(line);
-
                     parseCommandOperands(line, stat);
                 }
-            }
+            }/*end if (instType == No) */
         }/*end if not ignore*/
-        /*fprintf(stderr," [DEBUG] line#%d  src: %c dest %c\n", stat -> lineNumber, stat-> srcOpAddressType,stat-> destOpAddressType );*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
-        fprintf(stderr," [DEBUG] line#Number promoted %d\n", stat -> lineNumber );
-
     }/*end while*/
     stat -> ICF = stat -> IC;
     stat ->  DCF = stat -> DC;
@@ -106,75 +84,68 @@ void firstPass(FILE* inputFile , STATUS* stat){
 
 }/*end of firstPass*/
 
+
+
+
 /*
   Performs the Second pass over the assembly file, and completes data on symbols
   params: FILE* inputFile - pointer to the input assembly file
   returns: 1 if errors occured and 0 otherwise
 */
-void secondPass(FILE* inputFile, STATUS* stat){
+void secondScan(FILE* inputFile, STATUS* stat){
     char line[MAX_LINE] = EMPTY_STRING;                            /*line of assembly code*/
     char symbol[MAX_LABEL] = EMPTY_STRING;                        /*to contain the label from line*/
     char instruction[MAX_INSTRUCTION] = EMPTY_STRING;            /*to contain the label from line*/
-    /*char command[MAX_CMD_LEN] = EMPTY_STRING; */                /*to contain the label from line*/
     Info instType;                             /*stands for instruction type*/
 
     /*********************************************************************************************************/
-    fprintf(stderr," \n\n[DEBUG] SECOND PASS \n\n");
-    resetLineNumber(stat);
+    resetLineNumber(stat); /* resets the input line count in status, to 1*/
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
 
         trimWhiteSpaces(line);  /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-        /*fprintf(stderr,"\n\n");*/
         if (!toIgnore(line) ){
             /***********************************SYMBOL CHECK**************************************/
             stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
               /*relevant to lines that begin with label definition*/
             if (strlen(symbol) > 0){
-                trimNchars(line, strlen(symbol)+1); /*restart line from end of symbol, which is empty if*/
+                trimNchars(line, strlen(symbol)+1); /*restart line from end of label, "+1" stand for the colon in the end*/
                 trimWhiteSpaces(line);
-                /*restart line from end of label, "+1" stand for the colon in the end*/
             }
             /**********************************INSTRUCTION CHECK***********************************/
             instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
 
-            if ( instType != Error && instType != No ){
-                /*then need to cut off instruction and trim spaces from rest of line*/
+            if ( instType != Error && instType != No ){ /*then need to cut off instruction and trim spaces from rest of line*/
                 trimNchars(line, strlen(instruction)); /*restart line from end of symbol, which is empty if*/
-                trimWhiteSpaces(line);
-                 /*restart line from end of instruction, which is empty if*/
+                trimWhiteSpaces(line);                 /*restart line from end of instruction, which is empty if*/
             } /*there was a problen in parsing*/
-            if ( instType == Entry ){
+            if ( instType == Entry )
                 if (parseEntry(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                    printf("[WARNING]  line#%d: Label definition before .extern instruction", stat -> lineNumber);/*NOT ERROR*/
+                    printf("[WARNING] File: %s.as line#%d: Label definition before .entry instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
                     /*at this point what's left of line is the operand that passed the test of parseEntry*/
-            }/*end if ( instType == Extern )*/
-            /*********************************COMMAND CHECK**************************************/
-
         }/*end if not ignore*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
-
     }/*end while*/
-    /*I chose to do fill the missing info in another loop over the code image
+    /* I chose to  fill the missing info in another loop over the code image
     since it doesn't chande the complexity, and does improve readability*/
     fillMissingDetailsInCodeTable(stat);
 
-    /*printf("SYMBOL TABLE\n");
-    printList(stat -> symbolTable, 'T');
+}/* end of secondPass*/
 
-    printf("CODE TABLE\n");
-    printList(stat -> codeTable , 'N');
 
-    printf("DATA TABLE\n");
-    printList(stat -> dataTable , 'N');*/
 
-}
-
+/*
+Scans the codeTable for missing data and fills in where valid.
+prints out error messages for errors found that are relevant to second pass
+params:
+STATUS* stat - pointer to status, for easy access to all info
+*/
 void fillMissingDetailsInCodeTable(STATUS* stat){
-    /*At this point the Symbol table is full, the data*/
-    Node* cursor = stat -> codeTable -> head;
+    /*At this point the Symbol table is full*/
     int currentAddress;
     CODE_IMG* codeBody = NULL;
     SYMBOL* symbol = NULL;
+    Node* cursor = stat -> codeTable -> head;
+
     while (cursor != NULL){/*Iterating on code image rows*/
         currentAddress = cursor -> keyNum;
         codeBody = getCodeImageBody(cursor); /*The bunch of fields of code image linked list  at this cursor locaion*/
@@ -185,14 +156,21 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
 
         if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){
             /*any operand symbol should be found in the symbol table, thus error*/
-            printf("[Error] line#%d: Symbol not defined --|%s|--\n", codeBody -> lineNumber, codeBody -> label);
+            printf("[Error] File: %s.as line#%d: Symbol not defined \n", stat-> fileName , codeBody -> lineNumber);
             activateErrorFlag(stat);
         }
-        if ( codeBody -> ARE == FillLater){
-            if ( codeBody -> comment == Relative)
-                codeBody -> code = (symbol-> address) - currentAddress;
+        if ( codeBody -> ARE == FillLater){ /* Find the relevant places to fill in*/
+
+            if ( codeBody -> comment == Relative){
+                if(symbol-> attr2==Extern){
+                    printf("[Error] File: %s.as line#%d: Extern symbol cannot be assigned as relative address.\n", stat-> fileName , codeBody -> lineNumber);
+                    activateErrorFlag(stat);
+                }
+                else codeBody -> code = (symbol-> address) - currentAddress; /* The calculation value  of distance for relative addressing operand*/
+            }
+
             else if ( codeBody -> comment == Direct)
-                codeBody -> code = symbol -> address;
+                codeBody -> code = symbol -> address;   /* insert value of direct operand */
 
             if (symbol -> attr2 == Extern )
                 codeBody -> ARE = E;

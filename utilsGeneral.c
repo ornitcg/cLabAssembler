@@ -1,5 +1,9 @@
 /*
-  Group of helper functions that are general and not related specifically to the assembler
+Author: Ornit Cohen gindi
+
+Here is a group of helper functions that are general and not related specifically to the assembler
+and not dependent on assembler related files.
+
 */
 
 #include <stdio.h>
@@ -9,17 +13,17 @@
 
 /*
 Checks if the file name is valid and if it can be opened
-returns pointer to file if OK and NULL otherwise
 params:
 char* fileName : the name of the file to be tested if validFile
+returns: FILE* - pointer to file if OK and NULL otherwise
 */
-FILE* validFile(char* fileName, char* extention){
+FILE* isValidFile(char* fileName, char* extention){
     FILE* file = NULL;
     char* findExtention  = strchr(fileName,'.');
     char tmpName[FILENAME_MAX];
 
     if (findExtention != NULL ){
-      fprintf(stderr,"[Error] - in file name %s\n", fileName);
+      fprintf(stderr,"[Error] - in file name %s\n", fileName); /*general error for including extention or just a '.' charchter*/
       return NULL;
     }
     sprintf(tmpName,"%s%s",fileName,extention);
@@ -28,6 +32,8 @@ FILE* validFile(char* fileName, char* extention){
       fprintf(stderr,"[Error] - cannot open the file %s\n", tmpName);
     return file;
 }
+
+
 
 /*
 Removes the last charachter in a given string
@@ -39,7 +45,11 @@ void remLastChar(char* string){
   if (len > 0)
     string[len-1] = '\0';
 }
-/*removes leading and trailing whitespaces from a string
+
+
+
+/*
+Removes leading and trailing whitespaces from a string
 params: char* str -  the string to trim
 returns: the trimmed string (in different ways of use for different types of strings)
 */
@@ -66,25 +76,60 @@ void trimWhiteSpaces(char* string){
 }
 
 
-void trimNchars(char* line,int numChars){
-    char tmpStr[MAX_STR] = EMPTY_STRING;
-    char* strP = tmpStr;
-    strcpy(strP,line);
 
-    if (strlen(strP) == 0)
+/*
+Removes the Number of charachters as given in numChars , from beginning of line.
+params:
+char* line - The line to remove numChars charachters from.
+int numChars - the number of charachters to remove from beginning of line
+*/
+void trimNchars(char* line,int numChars){
+    char tmpStr[MAX_STR] = EMPTY_STRING; /*for holding the original string*/
+    char* strP = tmpStr;                 /*for running over the string*/
+    int len = strlen(line);
+    strcpy(tmpStr,line);
+
+    if (len == 0 || len < numChars)
         return;
 
     strP += numChars;
-    strcpy(line, EMPTY_STRING);
-    strcpy(line, strP);
+    /*strcpy(line, EMPTY_STRING);*/ /*restarting line string*/ /*DEBUG*/
+    strcpy(line, strP); /*copy strP into line*/
+
 }
 
+
+/*
+Empties the given string.
+params: char* string - the string to remove all charachters from
+*/
+void emptyString(char* string){
+    string[0] = '\0';
+}
+
+
+
+/*
+Checks if a given string is emptyString
+params:
+char* string - the string to check if empty.
+returns int - the value of macro YES/NO
+*/
 int isEmptyString(char* string){
     if (strlen(string)==0)
         return YES;
     return NO;
 }
 
+
+/*
+Checks if there are commas at the first and last charachter of string lines
+assuming there are no heading or tailing whitespaces
+params:
+char* line - the string to be checkd for heading and tailing comma
+returns:
+int value for  YES/NO macro values
+*/
 int externalCommas(char* line){
     int len = strlen(line);
     if (len > 0)
@@ -92,6 +137,7 @@ int externalCommas(char* line){
             return YES;
     return NO;
 }
+
 
 /*
 Checks if a charachter is a space or tab
@@ -104,6 +150,17 @@ int isWhiteSpace(char c){
   return NO;
 }
 
+
+/*
+Searches for a charachter targetChar in strings
+and finds the first position of it
+params:
+char* string - the string to search within
+char targetChar - the charachter to lookup in string
+Returns
+int - the position value of the charachter in
+string and NOT_FOUND macro  (integer) otherwise
+*/
 int firstPosOfChar(char* string, char targetChar){
     int pos = 0;
     while (string[pos] != '\0'){
@@ -119,40 +176,15 @@ int firstPosOfChar(char* string, char targetChar){
     return NOT_FOUND;
 }
 
-void emptyString(char* string){
-    string[0] = '\0';
-}
 
+
+/*
+Turns off the four leftmost bits of the short type
+so that only the 12 rightmost bits dictate the code
+params: short code - the data of type short, to turn to twelve bits
+returns: short type of the same code with 4 leftm oset bits turned to 0
+*/
 short shortToTwelveBits(short code){
     short mask = ((unsigned short)(-1)) >> 4;
     return (code & mask);
-}
-
-/* Removes the extention from a fileName, if there is an extention*/
-void removeExtention(char* fileName){
-    fileName[firstPosOfChar(fileName,EXTENTION_IDENTIFIER)]='\0';
-}
-
-/**/
-void toBinaryString(short source, char* final){
-    char dest[12] = "000000000000";
-    int len =strlen(dest);
-    int ind=len-1;
-
-    while ((source/2) >0 ){
-        if ((source%2) ==0)
-            dest[ind] = '0' ;
-        else dest[ind] = '1' ;
-        source=(source/2);
-        ind--;
-    }
-    if ((source%2) ==0)
-        dest[ind] = '0' ;
-    else dest[ind] = '1' ;
-    strcpy(final,dest);
-
-
-}
-
-void do_nothing(){
 }

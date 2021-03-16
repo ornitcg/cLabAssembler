@@ -3,7 +3,7 @@
 
 #include "linkedList.h"
 #include "utilsGeneral.h"
-#include "utilsAssembler.h"
+
 
 #define MAX_LINE 81
 #define MAX_LABEL 32
@@ -19,6 +19,11 @@
 #define INSTRUCTION_IDENTIFIER '.'
 #define IMMEDIATE_IDENTIFIER '#'
 #define RELATIVE_IDENTIFIER '%'
+
+/*Info contains a bunch of word that are helpfull for readability*/
+enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative ='2' , Register ='3' ,Error = -1, No =0, Yes=1, Ok=2, Source=3, Dest=4, Code =5, Data=6, String=7,  Entry=8 , Extern=9 , Empty = '_'  , FillLater ='?' };
+
+typedef enum Info Info;
 
 
 typedef struct STATUS{
@@ -57,6 +62,7 @@ void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1,
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
 void updateSymbolTable(STATUS* stat);
 SYMBOL* getSymbolBody (Node* cursor);
+void updateDataTable(STATUS* stat);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 typedef struct CODE_IMG {
     Info comment;

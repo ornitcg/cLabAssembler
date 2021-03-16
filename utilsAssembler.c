@@ -10,76 +10,12 @@
 #include "utilsAssembler.h"
 #include "asStructsAndMacros.h"
 
-void DO_SOMETHING(){
-  /*for place holding*/
+
+
+void printErrorWithLocation(STATUS* stat, char* message){
+    printf("[ERROR] File:%s Line:%d %s\n", stat -> fileName, stat->lineNumber, message);
 }
-void printEnumName(Info name){
-    switch (name){
-        case Error:
-            printf("%s\n","Error" );
-            break;
-        case Yes:
-            printf("%s\n","Yes" );
-            break;
-        case No:
-            printf("%s\n","No" );
-            break;
-        case Empty:
-            printf("%s\n","Empty" );
-            break;
-        case A:
-            printf("%s\n","A" );
-            break;
-        case R:
-            printf("%s\n","R" );
-            break;
-        case E:
-            printf("%s\n","E" );
-            break;
-        case Immediate:
-            printf("%s\n","Immediate" );
-            break;
-        case Direct:
-            printf("%s\n","Direct" );
-            break;
-        case Relative:
-            printf("%s\n","Relative" );
-            break;
-        case Register:
-            printf("%s\n","Register" );
-            break;
-        case Source:
-            printf("%s\n","Source" );
-            break;
-        case Dest:
-            printf("%s\n","Dest" );
-            break;
-        case Code:
-            printf("%s\n","Code" );
-            break;
-        case Data:
-            printf("%s\n","Data" );
-            break;
-        case String:
-            printf("%s\n","String" );
-            break;
-        case Entry:
-            printf("%s\n","Entry" );
-            break;
-        case Extern:
-            printf("%s\n","Extern" );
-            break;
-        case FillLater:
-            printf("%s\n","FillLater" );
-            break;
-        case Ok:
-            printf("%s\n","Ok" );
-            break;
-        default:
-            printf("%s\n","Default" );
-        break;
-    }
-}
+
 
 
 
@@ -104,10 +40,8 @@ assuming the input is correct
 */
 short  buildFirstWord(short opcode, short funct, short src, short dest){
   signed short  res;
-  /*fprintf(stderr, "[DEBUG] opcode: %d funct: %d src: %d dest: %d\n", opcode, funct,src,dest);*/
   if (src >0 ) src -=48; /*if not zero; received as char*/
   if (dest >0 )dest -=48; /*if not zero; received as char*/
-  /*fprintf(stderr, "[DEBUG] opcode: %d funct: %d src: %d dest: %d\n", opcode, funct,src,dest);*/
 
   src = src << 2;
   funct = funct << 4;
@@ -134,7 +68,6 @@ Info isValidAsNumber(char* string){
 Info isReservedWord(char* string){
     int i=0;
     SET_RESERVED_ARR(resv);
-    /*printf("reserved word %s\n", resv[4]) ;*/
     while ( strcmp(resv[i], "NULL") != 0 ){ /*end of reserved words list*/
         if (strcmp( resv[i], string) == 0)  /*casefound use of reserved word*/
             return Yes;
@@ -147,7 +80,6 @@ short wordValueOfNoneLabelOperand(char* operand, Info addressType){
     short word;
     if (addressType == Immediate){
         word =  (short)atoi(operand);
-        /*fprintf(stderr,"[DEBUG] in wordValueOfNoneLabelOperand Immediate value is: %d\n", word);*/
     }
     if (addressType == Register)
         word = 1 << (lookupRegister(operand));

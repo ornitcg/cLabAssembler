@@ -32,9 +32,7 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
     tmpSymbol[cursor] = '\0';
 
     if (isValidAsSymbol(tmpSymbol, stat) == Yes){
-        /*fprintf(stderr,"[2] DEBUG parse symbol --%s--  --%s--  \n",symbol, tmpSymbol);*/
         strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
-        /*fprintf(stderr,"[3] DEBUG parse symbol \n");*/
         return Yes ;
     }
     return activateErrorFlag(stat);
@@ -61,7 +59,7 @@ int validSymbolChars(char* symbol){ /*OK*/
 
 Info isValidAsSymbol(char* string, STATUS* stat){
     if (strlen(string) > MAX_LABEL){
-        printf("[Error] line# %d: Label is too long: %s  \n",  stat -> lineNumber,string);
+        printErrorWithLocation(stat, "Label is too long");
         return Error;
     }
     if (!validSymbolChars(string)){

@@ -25,7 +25,7 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
         if (strcmp(instruction, ".string") == 0) return String;
         if (strcmp(instruction, ".extern") == 0) return Extern;
         if (strcmp(instruction, ".entry") == 0) return Entry;
-        printf("line#%d: Error - Invalid instruction name\n", stat->lineNumber);
+        printErrorWithLocation(stat,"Invalid instruction name");
         activateErrorFlag(stat);
         return Error;
     }
@@ -37,7 +37,7 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
 
 void parseData(char* line, Info type, STATUS* stat){
     if (strlen(line) == 0 ){
-        printf("[Error] line#%d: Missing data\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Missing data");
         stat -> errorExists = Yes;
         return;
     }
@@ -50,7 +50,7 @@ void parseData(char* line, Info type, STATUS* stat){
 Info parseStringData(char* string, STATUS* stat){
     int strEndInd;
     if (strlen(string) ==0){
-        printf("[Error] line#%d: Missing string operand\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Missing string parameter");
         return activateErrorFlag(stat);
     }
 
@@ -69,7 +69,7 @@ Info parseStringData(char* string, STATUS* stat){
         (stat -> DC)++;
         return String; /*reminder: String is of info type. empty string is acceptable*/
     }
-    printf("[Error] line#%d: Invalid string\n", stat -> lineNumber);
+    printErrorWithLocation(stat, "Invalid string");
     return activateErrorFlag(stat);
 
 }
@@ -80,22 +80,22 @@ Info parseExtern(char* line, STATUS* stat){
     SYMBOL* symBody;
 
     if (isEmptyString(line)){
-        printf("[Error] line#%d: Missing operand after .extern instruction\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Missing parameter after .extern instruction");
         return activateErrorFlag(stat);
     }
     if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
-        printf("[Error] line#%d: Too many operands after .extern instruction\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Too many parameters after .extern instruction");
         return activateErrorFlag(stat);
     }
     if (isValidAsSymbol(line, stat) == Error){
-        printf("[Error] line#%d: Invalid symbol after .extern instruction\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Invalid symbol after .extern instruction");
         return activateErrorFlag(stat);
     }
     symBody = lookupSymbol(stat->symbolTable , line);
 
     if (symBody != NULL){ /*Found in symbol table*/
         if (symBody -> attr2 == Entry ){ /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
-            printf("[Error] line#%d: Symbol can't be both extern and entry\n", stat -> lineNumber);
+            printErrorWithLocation(stat,"Symbol can't be assigned both extern and entry");
             return activateErrorFlag(stat);
         }
         symBody -> attr2 = Extern; /*DEBUG???*/
@@ -105,48 +105,52 @@ Info parseExtern(char* line, STATUS* stat){
     return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 }
 
+
+/*
+Searches for valid parameter (symbol) after .entry instruction.
+Prints out error messages if rest of text after entry, is invalid.
+params:
+char* line -string that contains the rest of line after
+the entry instruction, trimmed from heading and tailing whitespaces
+STATUS* stat - for easy access to status parameters as lineNumber and symbolTable
+returns:
+Info type as Error if found any, or Yes, if entry instruction line is all valid.
+*/
 Info parseEntry(char* line, STATUS* stat){
-    SYMBOL* symBody;
+    SYMBOL* symBody; /* To hold the body of lookedup the symbol */
 
     if (isEmptyString(line)){
-        printf("[Error] line#%d: Missing operand after .entry instruction\n", stat -> lineNumber);
+        printErrorWithLocation(stat,"Missing parameter after .entry instruction");
         return activateErrorFlag(stat);
     }
     if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
-        printf("[Error] line#%d: Too many operands after .entry instruction\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Too many parameters after .entry instruction");
         return activateErrorFlag(stat);
     }
     if (isValidAsSymbol(line, stat) == Error){
-        /*printf("[6][DEBUG] in ParseEntry changing attribute to Entry --|%s|--\n", line);*/
-
-        printf("[Error] line#%d: Invalid symbol after .entry instruction\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Invalid symbol after .entry instruction");
         return activateErrorFlag(stat);
     }
     symBody = lookupSymbol(stat->symbolTable , line);
-    /*printf("[7][DEBUG] in ParseEntry looking for label --|%s|--\n", line);*/
 
     if(symBody == NULL){
-        /*printf("[8][DEBUG] in ParseEntry changing attribute to Entry --|%s|--\n", line);*/
-
-        printf("[Error] line#%d: Entry symbol not defined\n", stat -> lineNumber);
+        printErrorWithLocation(stat, "Entry symbol not defined");
         return activateErrorFlag(stat);
     }
-    else if (symBody -> attr2 == Extern){ /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
-        /*printf("[9][DEBUG] in ParseEntry changing attribute to Entry --|%s|--\n", line);*/
-
-            printf("[Error] line#%d: Symbol can't be both extern and entry\n", stat -> lineNumber);
+    else if (symBody -> attr2 == Extern){
+    /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
+            printErrorWithLocation(stat, "Symbol can't be both extern and entry");
             return activateErrorFlag(stat);
         }
-    /*printf("[10][DEBUG] in ParseEntry changing attribute to Entry --|%s|--\n", line);*/
-
     symBody -> attr2 = Entry;
-    /*printf("[11][DEBUG] in ParseEntry changing attribute to Entry --|%s|--\n", line);*/
-
     return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 }
 
 
+/*
 
+
+*/
 Info parseNumbersData(char* line, STATUS* stat){
     int cursor = 0;
     short data;
@@ -156,7 +160,7 @@ Info parseNumbersData(char* line, STATUS* stat){
         trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
 
         if (externalCommas(line)){
-            printf("[Error] line#%d: Invalid commas\n", stat -> lineNumber);
+            printErrorWithLocation(stat, "Invalid commas");
             return Error;
         }
         cursor =  firstPosOfChar(line, COMMA); /*find the first colon position returns -1 if no comma found*/
@@ -173,23 +177,21 @@ Info parseNumbersData(char* line, STATUS* stat){
         /*now we have a dataString that is supposed to be a data item*/
         if (isValidAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
             if (firstPosOfChar(dataString, DECIMAL_POINT) != NOT_FOUND){
-                printf("[Error] line#%d: Fractions are not supported\n", stat->lineNumber);
+                printErrorWithLocation(stat,"Fractions anf Floating point are not supported");
                 return activateErrorFlag(stat);
             }
             data = atoi(dataString); /*invert string to number*/
             if (validInWordRange(data) == YES){
                 addData(stat -> dataTable ,stat -> DC , data, 'A'); /*add data to data image*/
-                /*fprintf(stderr,"[DEBUG] in parse string data printing list after addition of data %d at DC %d\n", data,stat -> DC);*/
-
                 (stat -> DC)++;
             }
             else{
-                printf("[Error] line#%d: Data out of range\n", stat->lineNumber);
+                printErrorWithLocation(stat, "Data out of range");
                 return activateErrorFlag(stat);
             }
         }
         else{/*not valid number*/
-            printf("[Error] line#%d: Invalid data\n", stat->lineNumber);
+            printErrorWithLocation(stat, "Invalid data");
             stat -> errorExists = Yes;
             return Error;
         }

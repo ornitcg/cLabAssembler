@@ -1,4 +1,5 @@
-/* Group of functions that deal with assembler data structures as init, add and lookup */
+/* Author:
+Group of functions that deal with assembler data structures as init, add and lookup */
 
 #include <stdio.h>
 #include <string.h>
@@ -6,6 +7,9 @@
 #include "asStructsAndMacros.h"
 #include "utilsAssembler.h"
 #include "utilsGeneral.h"
+
+
+
 
 
 /* searches through the symbol table for a given label (symbol)
@@ -22,6 +26,13 @@ SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
 }
 
 
+
+/*
+Initializes the STATUS structure for the current fileName
+params:
+STATUS* stat - pointer to the status structure to be initiallized
+char* fileName - string of the current file name without extention
+*/
 void initStatus(STATUS* stat, char* fileName){
     stat -> IC = INIT_ADDRESS;    /*instructions counter*/
     stat -> DC = 0;      /*data counter*/
@@ -40,18 +51,44 @@ void initStatus(STATUS* stat, char* fileName){
     stat -> dataTable = linkedListInit(sizeof(DATA_IMG));            /*starting a linked list of data image*/
 }
 
+
+
+
+/*
+Turns the errorExists flag in STATUS  to Yes, once an error is Found
+params:
+STATUS* stat - in which the flag is a field
+returns:
+Info type Error value
+*/
 Info activateErrorFlag(STATUS* stat){
     stat -> errorExists = Yes;
     return Error;
 }
 
+
+
+
+
+/*
+Gets the address type of the given type of operand.
+params:
+Info opType - source (Source) operand or destination (Dest) operand
+STATUS* stat - in which the current operands address types are fields
+returns:
+Info type - address type values of operands: Immediate/Direct/Relative/Register
+*/
 Info getAddressType(Info opType,STATUS* stat){
     if (opType == Source)
         return stat -> srcOpAddressType;
     if (opType == Dest)
         return stat -> destOpAddressType;
-    return Error;/*this line was just necesary for compiler. this function assumes validity, thus no error messages*/
+    return Error;/*this line was just necessary for compiler. this function assumes validity, thus no error messages*/
 }
+
+
+
+
 
 /* Resets part of the field in status struct, for every line of the input file*/
 void resetStatStructForLine(STATUS* stat){
@@ -63,34 +100,14 @@ void resetStatStructForLine(STATUS* stat){
     stat -> destOpAddressType = Empty;
 }
 
+
+/*
+Sets lineNumber 
+*/
 void resetLineNumber(STATUS* stat){
     stat -> lineNumber =1;
 }
 
-
-/* prints the keys of a linked LIST, used for debugging
-params:
-ll - pointer to linkedListInit
-type - char ('T' for text , 'N' for number) to
-define which type of key is relevant to the
-given linked list to print*/
-void printList(LinkedList* ll, char type){
-    Node* cursor = ll->head;
-    SYMBOL* symbody =NULL;
-
-    while (cursor != NULL){
-
-        if (type == 'T'){
-            symbody = getSymbolBody(cursor);
-            /*fprintf(stderr, "DEBUG -in printList key is %s The value id %d attr2 =",cursor -> keyStr, symbody -> address);*/
-            printEnumName(symbody->attr2);
-            printf("\n");
-        }
-        if (type == 'N')
-            /*fprintf(stderr, "DEBUG -in printList key is %04d\n",cursor -> keyNum);*/
-        cursor = cursor -> next;
-    }
-}
 
 /*
 Adds a symbol to symbolTable
@@ -104,7 +121,7 @@ STATUS* stat - pointer to statust structure, for easy access to current line num
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat){
     SYMBOL body;
     if (lookupSymbol(symbolTable, symbol) != NULL){
-        printf("[Error] line# %d: Label %s is already in symbol table\n", stat -> lineNumber, symbol);
+        printErrorWithLocation(stat, "Label is already in symbol table");
         activateErrorFlag(stat);
     }
     body.address = address;
@@ -112,6 +129,8 @@ void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1,
     body.attr2 = attr2;
     appendNode( 0 , symbol , &body, symbolTable);
 }
+
+
 
 /*
 Gets the bunch of fields of a SYMBOL structure
@@ -123,6 +142,9 @@ SYMBOL* - pointer to the SYMBOL structure which is a field in Node
 SYMBOL* getSymbolBody (Node* cursor){
     return (SYMBOL*)(cursor -> body);
 }
+
+
+
 
 /* Updates The symbol table at the end of the first pass
 wherever there is a symbol that is related to dataTableits
@@ -138,6 +160,12 @@ void updateSymbolTable(STATUS* stat){
     }
 }
 
+
+
+
+
+
+
 void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE){
     CODE_IMG body;
     strcpy(body.label, label);
@@ -148,9 +176,20 @@ void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment,
     appendNode(address, EMPTY_STRING , &body, codeTable);
 }
 
+
+/*
+Gets the bunch of fields of a CODE_IMG structure
+params:
+Node* cursor -  pointer to head of codeTable linkedList
+returns:
+CODE_IMG* - pointer to the CODE_IMG structure which is a field in Node
+*/
 CODE_IMG* getCodeImageBody (Node* cursor){
     return (CODE_IMG*)(cursor -> body);
 }
+
+
+
 
 void addData(LinkedList* dataTable, short address, short data, Info ARE){
     DATA_IMG body;
@@ -159,11 +198,22 @@ void addData(LinkedList* dataTable, short address, short data, Info ARE){
     appendNode(address, EMPTY_STRING,  &body, dataTable);
 }
 
+/*
+Gets the bunch of fields of a DATA_IMG structure
+params:
+Node* cursor -  pointer to head of dataTable linkedList
+returns:
+DATA_IMG* - pointer to the DATA_IMG structure which is a field in Node
+*/
 DATA_IMG* getDataImageBody (Node* cursor){
     return (DATA_IMG*)(cursor -> body);
 }
 
-
+/*
+Frees all the mallocs of the linked lists of the three tables that stat holds
+params:
+STATUS* stat - pointer to STATUS that holds the malloced linked lists
+*/
 void freeMemory(STATUS* stat){
     killList(stat->symbolTable);
     killList(stat->codeTable);
