@@ -23,6 +23,7 @@ Allowing no whitespaces between the colon of a label definition and the next thi
  since it was up to me - approved by JUDY ISSACS
 No floating point allowed even if the operand is still a whole number
 Ignoring the assumptin of 4096 words in RAM - approved by JUDY ISSACS
+Not allowing data numbers that  the range of signed 12 bits. 
 If any error is found in the first scan, second scan will not occure.
 
 */

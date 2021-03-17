@@ -11,75 +11,6 @@ Group of helper utils functions that are related to assembler
 #include "utilsAssembler.h"
 #include "asStructsAndMacros.h"
 
-void printEnumName(Info name){
-    switch (name){
-        case Error:
-            printf("%s\n","Error" );
-            break;
-        case Yes:
-            printf("%s\n","Yes" );
-            break;
-        case No:
-            printf("%s\n","No" );
-            break;
-        case Empty:
-            printf("%s\n","Empty" );
-            break;
-        case A:
-            printf("%s\n","A" );
-            break;
-        case R:
-            printf("%s\n","R" );
-            break;
-        case E:
-            printf("%s\n","E" );
-            break;
-        case Immediate:
-            printf("%s\n","Immediate" );
-            break;
-        case Direct:
-            printf("%s\n","Direct" );
-            break;
-        case Relative:
-            printf("%s\n","Relative" );
-            break;
-        case Register:
-            printf("%s\n","Register" );
-            break;
-        case Source:
-            printf("%s\n","Source" );
-            break;
-        case Dest:
-            printf("%s\n","Dest" );
-            break;
-        case Code:
-            printf("%s\n","Code" );
-            break;
-        case Data:
-            printf("%s\n","Data" );
-            break;
-        case String:
-            printf("%s\n","String" );
-            break;
-        case Entry:
-            printf("%s\n","Entry" );
-            break;
-        case Extern:
-            printf("%s\n","Extern" );
-            break;
-        case FillLater:
-            printf("%s\n","FillLater" );
-            break;
-        case Ok:
-            printf("%s\n","Ok" );
-            break;
-        default:
-            printf("%s\n","Default" );
-        break;
-    }
-}/*DEBUG*/
-
-
 
 /*
 Checks if the current input line is an empty line or a comment line.
@@ -97,14 +28,20 @@ int toIgnore(char* line){
 
 
 /*
-Prints an error message with a unified format
+Prints an error/warning message with a unified format
 params:
 STATUS* stat - for easy access to status info
 char* message - ths message string to print
 */
-void printErrorWithLocation(STATUS* stat, char* message){
-    printf("[ERROR][File:%s Line:%d] %s\n", stat -> fileName , stat->lineNumber, message);
+void printMessageWithLocation( Info type ,STATUS*  stat , char* message ){
+    if (type == Error)
+        printf("[ERROR][File:%s Line:%d] %s\n", stat -> fileName , stat->lineNumber, message);
+    else if (type == Warning)
+        printf("[WARNING][File:%s Line:%d] %s\n", stat -> fileName , stat->lineNumber, message);
+
+
 }
+
 
 
 

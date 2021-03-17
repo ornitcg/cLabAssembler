@@ -1,7 +1,7 @@
-all: prog
+all: assembler
 
-prog: assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o buildOutput.o
-	gcc -ansi -g -Wall -pedantic -o prog assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o buildOutput.o
+assembler: assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o buildOutput.o
+	gcc -ansi -g -Wall -pedantic -o assembler assembler.o asScanners.o symbolFuncs.o instructionFuncs.o commandFuncs.o utilsAssembler.o  asStructsAndMacros.o utilsGeneral.o  linkedList.o buildOutput.o
 
 assembler.o: assembler.c  asStructsAndMacros.h asScanners.h utilsAssembler.h utilsGeneral.h buildOutput.h
 	gcc -ansi -g -Wall -pedantic  -c assembler.c
@@ -34,4 +34,4 @@ utilsGeneral.o: utilsGeneral.c utilsGeneral.h
 	gcc -ansi -g -Wall -pedantic -c utilsGeneral.c
 
 clean:
-	rm *.o  #prog
+	rm *.o  assembler

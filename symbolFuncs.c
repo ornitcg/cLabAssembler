@@ -38,25 +38,29 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
         return No;
     strncpy(tmpSymbol, line, cursor ); /*get the string part until the colon sign*/
     tmpSymbol[cursor] = '\0';
+    if (isEmptyString(tmpSymbol) == Yes){
+        printMessageWithLocation(Error,stat,"Expected label to define");
+        return activateErrorFlag(stat);
+    }
 
     if (isValidAsSymbol(tmpSymbol, stat) == Yes){
         strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
         return Yes ;
     }
-
-    return activateErrorFlag(stat);
+    else return activateErrorFlag(stat);
 }
 
 /*
 Checks if symbol characters are all valid.
 params: char* symbol - the symbol to check
 returns: int - Yes if symbol contains invalid symbol
-and No otherwise
+and No otherwise.
+a No in not necessarily an error , thus No
 */
 int validSymbolChars(char* symbol){ /*OK*/
     int cursor = 0;
     char c;
-    if (strlen(symbol) == 0)
+    if (isEmptyString(symbol) == YES)
         return NO;
     c = symbol[0];
     if (c < 65 || (c > 90 && c < 97) || c > 122)
@@ -79,19 +83,20 @@ params:
 char* string - the string to check if valid as symbol
 STATUS* stat - for easy access to status info used in error messages
 returns: Info type - Yes if string is valid as symbol, and Error otherwise
+assumes string is a whole symbol without whitespaces. if there are any it's an error
 */
 Info isValidAsSymbol(char* string, STATUS* stat){
 
     if (strlen(string) > MAX_LABEL){
-        printErrorWithLocation(stat, "Label is too long");
+        printMessageWithLocation(Error, stat, "Label is too long");
         return activateErrorFlag(stat);
     }
     if (!validSymbolChars(string)){
-        printErrorWithLocation(stat, "Invalid characters in label");
+        printMessageWithLocation(Error, stat, "Invalid characters in label");
         return activateErrorFlag(stat);
     }
     if (isReservedWord(string) == Yes){
-        printErrorWithLocation(stat , "Used reserved word for label");
+        printMessageWithLocation(Error, stat, "Used reserved word for label");
         return activateErrorFlag(stat);
     }
     return Yes;

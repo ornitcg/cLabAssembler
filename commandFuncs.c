@@ -1,6 +1,7 @@
 /*
 Author: Ornit Cohen Gindi
 This is a group of functions that deal with all the parsing that has to do with a command and its operands.
+and building the words for the commands and getOperands
 */
 
 #include <stdio.h>
@@ -14,11 +15,15 @@ This is a group of functions that deal with all the parsing that has to do with 
 #include "commandFuncs.h"
 
 
-/* searches line for a valid command statement
-If none found, returns Error for at this stage
-the only valid option is to find a command
-if a valid command is found , the parsed command
-name is returned via the command parameter */
+/* searches line for a valid command statement.
+params:
+char* command - to collect the command found. stays empty if none found.
+char* line - the input string to search within.
+STATUS* stat - to access status info, including the commandNumber field to update if a valid command is found.
+returns:
+Info type - Ok , if  a valid command found, and the parsed command is coyed into the parameter commands
+, and returns Error if no command found (since at this stage a command must be found)
+ */
 Info parseCommand(char* command, char* line, STATUS* stat ){
     int ind;
     /* At this point , line is clean of heading whitespaces */
@@ -26,7 +31,7 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     strcpy(command, EMPTY_STRING);                       /*initialization of command string*/
 
     if (isEmptyString(line) == YES){
-        printErrorWithLocation(stat, "Command expected");
+        printMessageWithLocation(Error , stat, "Command expected" );
         return activateErrorFlag(stat);
     }
     cursor= firstPosOfChar(line, WHITE_SPACE);              /*find the first whitespace position*/
@@ -38,7 +43,7 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     }
     ind = lookupCommand(command);                           /*find index of command in commands table*/
     if (ind == NOT_FOUND){
-        printErrorWithLocation(stat, "Invalid command");
+        printMessageWithLocation(Error, stat, "Invalid command");
         return activateErrorFlag(stat);
     }
     stat -> commandNumber = ind; /*add the commandNumber to STATUS to make access easier*/
@@ -68,18 +73,18 @@ void parseCommandOperands(char* line, STATUS* stat){
     stat -> destOpAddressType = operandAddressType(opDest , stat);
 
     if(externalCommas(line)){ /*comma before first operand or after last operand are not allowed*/
-        printErrorWithLocation(stat ," Leading/tailing comma are not allowed");
+        printMessageWithLocation(Error, stat,"Extra comma are not allowed");
         /*Allowed By Judy Issacs to generalize the type of Error*/
         errorStatus = Error;
     }
     /*less operand than expected (assuming that if missing comma the whole string is received as one operand (most likely with spaces but I chose to look at it as a missing operand error))*/
-    if ((opNumFound < opNumAllowed )){
-        printErrorWithLocation(stat, " Missing Operand(s)");
+    else if ((opNumFound < opNumAllowed )){
+        printMessageWithLocation(Error, stat, "Missing Operand(s)");
         errorStatus = Error;
     }
     /*got more operands than expected*/
-    if ((opNumAllowed  < opNumFound)){
-        printErrorWithLocation(stat, "Too many operands");
+    else if ((opNumAllowed  < opNumFound)){
+        printMessageWithLocation(Error, stat, "Too many operands");
         /*Allowed By Judy to generalize the type of Error*/
         errorStatus = Error;
     }
@@ -90,7 +95,7 @@ void parseCommandOperands(char* line, STATUS* stat){
     if (errorStatus == Ok ){
 
         /*if (opNumFound == 0 && opNumAllowed == 0)*/ /*no operand expected, and 0 received*/
-        addFirstWord(opNumFound, opSrc, opDest, stat);
+        addFirstWord(opNumFound, stat);
         if(opNumFound > 0 && opNumFound == opNumAllowed){
                 if (opNumAllowed == 1){
                     addOperandWord(opDest, Dest, stat);
@@ -110,12 +115,19 @@ void parseCommandOperands(char* line, STATUS* stat){
 
 
 
-
-void addFirstWord(int opNum, char* opSrc, char* opDest, STATUS* stat){
+/*
+Wrappper to buildFirstWord
+Adds to code table, the first word that fits lines of commands
+according to the number of operands.
+params:
+int opNum - the number of operands for command
+STATUS* stat - for info about source and destination operand addresses, and linke to codTable
+*/
+void addFirstWord(int opNum,  STATUS* stat){
     int cmdIndex =  stat -> commandNumber;
     Info comment = Ok;
     short firstWord;
-    char* label = stat-> label;
+    char* label = stat-> label; /*if there is a label definition, it will be copied into the label field in the code table (for the first word)*/
     SET_COMMAND_TABLE(cmd);
 
     if (opNum == 0)
@@ -129,7 +141,14 @@ void addFirstWord(int opNum, char* opSrc, char* opDest, STATUS* stat){
 
 
 
-
+/*
+Wrapper function - Checks the address type of a given operand and the addressing validity,
+and calls the addCode with the matching parameters, that adds the right word to the code table.
+params:
+char* operand - the operand to build a word for
+Info opType - the type of the given operand (Source or Destinatin)
+STATUS* stat - for easy access to required status info
+*/
 void addOperandWord(char* operand, Info opType, STATUS* stat){ /*opType is source/Dest*/
     Info addressType;
     short opWord;
@@ -188,7 +207,7 @@ int getOperands(char* line,char* opSrc,char* opDest, STATUS* stat){
         trimWhiteSpaces(line);    /*remove whitespaces around the rest of line*/
 
         if (firstPosOfChar(line, COMMA) != NOT_FOUND){ /*if any comma is found at this point this is an error*/
-            printErrorWithLocation(stat, "Found too many operands");
+            /*printMessageWithLocation(Error, stat, "Found too many operands");*/
             activateErrorFlag(stat);
             return 1; /* error since 2  operands are expected*/
         }
@@ -230,7 +249,7 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
     else if (opType == Source)
         res = firstPosOfChar(cmd[cmdIndex].opSrc, addressType);
     if (res == NOT_FOUND){
-        printErrorWithLocation(stat, "Invalid adressing type op operand");
+        printMessageWithLocation(Error, stat, "Invalid adressing type op operand");
         return activateErrorFlag(stat);;
     }
     return Yes;
@@ -253,7 +272,7 @@ Info operandAddressType(char* operand,  STATUS* stat){
         operand++;
         if (isValidAsNumber(operand))
             return Immediate;
-        printErrorWithLocation(stat, "Operand is invalid as Immediate");
+        printMessageWithLocation(Error, stat, "Operand is invalid as Immediate");
         return activateErrorFlag(stat);
     }
     if (operand[0] == RELATIVE_IDENTIFIER){ /*check if operand is relative*/
@@ -261,17 +280,17 @@ Info operandAddressType(char* operand,  STATUS* stat){
         if (isValidAsSymbol(operand, stat)){
             sym = lookupSymbol(stat -> symbolTable, operand);
             if (sym!= NULL && (sym -> attr2)== Extern){
-                    printErrorWithLocation(stat,"Extern Label cannot be used in relative addressing");
+                    printMessageWithLocation(Error, stat,"Extern Label cannot be used in relative addressing");
                     return activateErrorFlag(stat);
             }
             else  return Relative;
         }
-        printErrorWithLocation(stat,"Operand is an invalid symbol");
+        printMessageWithLocation(Error, stat,"Operand is an invalid symbol");
         return activateErrorFlag(stat);
     }
     if (isValidAsSymbol(operand, stat))
         return Direct;
-    else  printErrorWithLocation(stat,"Operand is an invalid symbol");
+    else  printMessageWithLocation(Error, stat,"Operand is an invalid symbol");
     return activateErrorFlag(stat);
 }
 

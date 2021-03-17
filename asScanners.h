@@ -2,15 +2,23 @@
 
 
 /*
-  Performs the first pass over the assembly file
-  params: FILE* inputFile - pointer to the input assembly file
-  returns: 1 if errors occured and 0 otherwise
+  Performs the first scan over the assembly file
+  params:
+  FILE* inputFile - pointer to the input assembly file
+  STATUS* stat - ths status information of the current scan
+  The algorithm goes like suggested by the university
 */
 void firstScan(FILE* inputFile , STATUS* stat);
+
+/*
+  Performs the second scan over the assembly file, and the codes table (code map)
+  and completes data on symbols
+  params:
+  FILE* inputFile - pointer to the input assembly file, reset to beginning of file
+  STATUS* stat - ths status information of the current file.
+  The algorithm goes like suggested by the university
+*/
 void secondScan(FILE* inputFile, STATUS* stat);
-void runAssembler(FILE* inputFile, char* fileName);
-
-
 
 
 

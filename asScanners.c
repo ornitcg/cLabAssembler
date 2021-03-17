@@ -15,12 +15,14 @@
 
 
 /*
-  Performs the first pass over the assembly file
-  params: FILE* inputFile - pointer to the input assembly file
-  returns: 1 if errors occured and 0 otherwise
+  Performs the first scan over the assembly file
+  params:
+  FILE* inputFile - pointer to the input assembly file
+  STATUS* stat - ths status information of the current scan
+  The algorithm goes like suggested by the university
 */
 void firstScan(FILE* inputFile , STATUS* stat){
-    /***********************************************DECLARATIONS***********************************************************/
+    /*********************************************** DECLARATIONS ***********************************************************/
     char line[MAX_LINE] = EMPTY_STRING;                       /*line of assembly code*/
     char symbol[MAX_LABEL] = EMPTY_STRING;                   /*to contain the label from line*/
     char instruction[MAX_INSTRUCTION]= EMPTY_STRING;         /*to contain the label from line*/
@@ -34,7 +36,7 @@ void firstScan(FILE* inputFile , STATUS* stat){
         /*fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
-            /***********************************SYMBOL CHECK**************************************/
+            /*********************************** SYMBOL CHECK **************************************/
             stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
 
               /*relevant to lines that begin with label definition*/
@@ -43,7 +45,7 @@ void firstScan(FILE* inputFile , STATUS* stat){
                 trimWhiteSpaces(line);
                 /*restart line from end of label, "+1" stand for the colon in the end*/
             }
-            /**********************************INSTRUCTION CHECK***********************************/
+            /********************************** INSTRUCTION CHECK ***********************************/
             if (stat -> errorForLine == No){
                 instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
 
@@ -61,7 +63,7 @@ void firstScan(FILE* inputFile , STATUS* stat){
                     /*if  instType == Entry do nothing*/
                 if ( instType == Extern )
                     if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                        printf("[WARNING][File: %s.as line#%d]: Label definition before .extern instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
+                        printMessageWithLocation(Warning, stat, "Label definition before .extern instruction");/*NOT ERROR*/
                         /*at this point what's left of line is the operand that passed the test of parseExtern*/
 
                 /*********************************COMMAND CHECK**************************************/
@@ -89,11 +91,13 @@ void firstScan(FILE* inputFile , STATUS* stat){
 
 
 
-
 /*
-  Performs the Second pass over the assembly file, and completes data on symbols
-  params: FILE* inputFile - pointer to the input assembly file
-  returns: 1 if errors occured and 0 otherwise
+  Performs the second scan over the assembly file, and the codes table (code map)
+  and completes data on symbols
+  params:
+  FILE* inputFile - pointer to the input assembly file, reset to beginning of file
+  STATUS* stat - ths status information of the current file.
+  The algorithm goes like suggested by the university
 */
 void secondScan(FILE* inputFile, STATUS* stat){
     char line[MAX_LINE] = EMPTY_STRING;                            /*line of assembly code*/
@@ -123,7 +127,7 @@ void secondScan(FILE* inputFile, STATUS* stat){
             } /*there was a problen in parsing*/
             if ( instType == Entry )
                 if (parseEntry(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                    printf("[WARNING][File: %s.as line#%d]: Label definition before .entry instruction",stat -> fileName,  stat -> lineNumber);/*NOT ERROR*/
+                    printMessageWithLocation(Warning, stat, "Label definition before .entry instruction");/*NOT ERROR*/
                     /*at this point what's left of line is the operand that passed the test of parseEntry*/
         }/*end if not ignore*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
@@ -153,13 +157,17 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
     while (cursor != NULL){/*Iterating on code image rows*/
         currentAddress = cursor -> keyNum;
         codeBody = getCodeImageBody(cursor); /*The bunch of fields of code image linked list  at this cursor locaion*/
+
+        stat -> lineNumber = codeBody -> lineNumber;
+        /* recycling this field of STATUS.lineNumber for easy use at error messages, since this field is redundant now and stat is being called anyway by the printMessageWithLocationesage function*/
+
         symbol = lookupSymbol(stat -> symbolTable, codeBody -> label);
         /*symbol points at the body of the symbol table link thatbelongs to the symbol
         at cursor location,if this location does not relate to a symbol, Null will be returned*/
 
         if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){
             /*any operand symbol should be found in the symbol table, thus error*/
-            printf("[Error][File: %s.as line#%d]: Symbol not defined \n", stat-> fileName , codeBody -> lineNumber);
+            printMessageWithLocation(Error, stat, "Symbol not defined \n");
             activateErrorFlag(stat);
         }
         if ( symbol!= NULL && codeBody -> ARE == FillLater){ /* Find the relevant places to fill in*/
@@ -167,13 +175,12 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
             if ( codeBody -> comment == Relative){
 
                 if(symbol-> attr2==Extern){
-                    printf("[Error][File: %s.as line#%d]: Extern symbol cannot be assigned as relative address.\n", stat-> fileName , codeBody -> lineNumber);
+                    printMessageWithLocation(Error, stat, "Extern symbol cannot be assigned as relative address.\n");
                     activateErrorFlag(stat);
                 }
                 else codeBody -> code = (symbol-> address) - currentAddress;
                 /* The calculation value  of distance for relative addressing operand*/
             }
-
             else if ( codeBody -> comment == Direct)
                 codeBody -> code = symbol -> address;   /* insert value of direct operand */
 

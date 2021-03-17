@@ -9,7 +9,7 @@
 #define COMMA ','
 #define EMPTY_STRING ""
 #define QUOTE '"'
-#define DECIMAL_POINT '.'
+#define FLOATING_POINT '.'
 #define EXTENTION_IDENTIFIER '.'
 
 #define MAX_STR 81

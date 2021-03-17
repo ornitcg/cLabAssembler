@@ -1,4 +1,8 @@
-/*need to add the line numbers*/
+/*
+Author: Ornit Cohen Gindi
+This file contains function that deal with parsing instruction lines, and the following data if exists
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,6 +13,18 @@
 #include "symbolFuncs.h"
 #include "instructionFuncs.h"
 
+
+/*
+Finds if there is an instruction in the input line.
+if found it is parsed into the parameter 'instruction'
+params:
+char* instruction - to collect the string of instruction name.
+char line - the input line o parse.
+STATUS* stat - to access/updae status info
+returns: Info - The ype of instruction if foune (Data/String/Extern/entry),
+No for no instruction found,
+and Error if error found
+*/
 Info  parseInstruction(char* instruction , char* line, STATUS* stat){
     int cursor = 0;
 
@@ -25,7 +41,7 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
         if (strcmp(instruction, ".string") == 0) return String;
         if (strcmp(instruction, ".extern") == 0) return Extern;
         if (strcmp(instruction, ".entry") == 0) return Entry;
-        printErrorWithLocation(stat,"Invalid instruction name");
+        printMessageWithLocation(Error, stat,"Invalid instruction name");
         activateErrorFlag(stat);
         return Error;
     }
@@ -35,25 +51,187 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
 
 
 
-void parseData(char* line, Info type, STATUS* stat){
+/*
+Parses the pat of line that comes after .extern instruction.
+params:
+char* line -string that contains the rest of line after
+the extern instruction, trimmed from heading and tailing whitespaces
+STATUS* stat - for easy access to status parameters and update them
+
+assuming attr2 is used only for extern and entry attributes
+*/
+Info parseExtern(char* line, STATUS* stat){
+    SYMBOL* symBody;
+
+    if (isEmptyString(line)){
+        printMessageWithLocation(Error, stat, "Missing parameter after .extern instruction");
+        return activateErrorFlag(stat);
+    }
+    if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
+        printMessageWithLocation(Error, stat, "Too many parameters after .extern instruction");
+        return activateErrorFlag(stat);
+    }
+    if (isValidAsSymbol(line, stat) == Error){
+        printMessageWithLocation(Error, stat, "Invalid symbol after .extern instruction");
+        return activateErrorFlag(stat);
+    }
+    symBody = lookupSymbol(stat->symbolTable , line);
+
+    if (symBody != NULL){ /*Found in symbol table*/
+        if (symBody -> attr2 == Entry ){ /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
+            printMessageWithLocation(Error, stat,"Symbol can't be assigned both extern and entry");
+            return activateErrorFlag(stat);
+        }
+        symBody -> attr2 = Extern; /*DEBUG???*/
+    }
+    else addSymbol(stat-> symbolTable, 0 /*address value*/,  line/*label*/, Empty /*attr1*/, Extern /*attr2*/,  stat);
+
+    return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
+}
+
+
+
+/*
+Searches for valid parameter (symbol) after .entry instruction.
+Prints out error messages if rest of text after entry, is invalid.
+params:
+char* line -string that contains the rest of line after
+the entry instruction, trimmed from heading and tailing whitespaces
+STATUS* stat - for easy access to status parameters and update them
+returns:
+Info type as Error if found any, or Yes, if entry instruction line is all valid.
+*/
+Info parseEntry(char* line, STATUS* stat){
+    SYMBOL* symBody; /* To hold the body of lookedup the symbol */
+
+    if (isEmptyString(line)){
+        printMessageWithLocation(Error, stat,"Missing parameter after .entry instruction");
+        return activateErrorFlag(stat);
+    }
+    if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
+        printMessageWithLocation(Error, stat, "Too many parameters after .entry instruction");
+        return activateErrorFlag(stat);
+    }
+    if (isValidAsSymbol(line, stat) == Error){
+        printMessageWithLocation(Error, stat, "Invalid symbol after .entry instruction");
+        return activateErrorFlag(stat);
+    }
+    symBody = lookupSymbol(stat->symbolTable , line);
+
+    if(symBody == NULL){
+        printMessageWithLocation(Error, stat, "Entry symbol not defined");
+        return activateErrorFlag(stat);
+    }
+    else if (symBody -> attr2 == Extern){
+    /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
+            printMessageWithLocation(Error, stat, "Symbol can't be both extern and entry");
+            return activateErrorFlag(stat);
+        }
+    symBody -> attr2 = Entry;
+    return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
+}
+
+
+
+/*
+wrapper function that calls the required data parsing function according
+to the type of data following the instruction
+params:
+char* line - the rest of input line, what's left after the instruction name.
+Info instruction - for String or Data (enum Info type)
+STATUS* stat - for other status info and update
+*/
+void parseData(char* line, Info instruction, STATUS* stat){
     if (strlen(line) == 0 ){
-        printErrorWithLocation(stat, "Missing data");
-        stat -> errorExists = Yes;
+        printMessageWithLocation(Error, stat, "Missing data");
+        activateErrorFlag(stat);
         return;
     }
-    if (type == String)
+    if (instruction == String)
         parseStringData(line, stat);
-    else
+    else /* instruction == Data */
         parseNumbersData(line, stat);
 }
 
 
 
+/*
+Parses the data of numbers that come after the instuction .data
+params:
+char* line - the part of input line that comed after the data instruction.
+STATUS* stat - to access status info.
+returns: Info type - Data if ok and Error if any found
+*/
+Info parseNumbersData(char* line, STATUS* stat){
+    int cursor = 0;
+    short data;
+    char dataString[MAX_LINE];
+    /*fprintf(stderr,"[DEBUG] in parsedata --%s--\n",line);*/
 
+    trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
+    if (externalCommas(line)){
+        printMessageWithLocation(Error, stat, "External commas are not allowed");
+        return activateErrorFlag(stat);
+    }
+    while (line[0] != '\0'){
+
+        if (externalCommas(line)){ /*useful after first trim of data*/
+            printMessageWithLocation(Error, stat, "Invalid commas found");
+            return activateErrorFlag(stat);
+        }
+        cursor =  firstPosOfChar(line, COMMA); /*find the first comma position returns -1 if no comma found*/
+        if (cursor != NOT_FOUND) { /*case comma found in data */
+            strncpy(dataString, line ,cursor); /*take a piece of string up to comma, into dataString*/
+            dataString[cursor] = '\0';
+            trimWhiteSpaces(dataString); /*trim whitespaces from the piece of datastring*/
+            trimNchars(line, cursor+1); /*remove the data string piece from line*/
+            trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
+        }
+        else if (isEmptyString(line) == Yes){ /*case nothing in rest of line*/
+            printMessageWithLocation(Error, stat, "Missing paramerer(s) for data");
+            return activateErrorFlag(stat);
+        }
+        else { /*case no commas in rest of line*/
+                strcpy(dataString, line);
+                emptyString(line);
+        }
+
+        /*now we have a dataString that is supposed to be a data item*/
+        if (isValidAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
+            if (firstPosOfChar(dataString, FLOATING_POINT) != NOT_FOUND){ /* floating point is not allowed*/
+                printMessageWithLocation(Error, stat,"Fractions anf Floating point are not allowed");
+                return activateErrorFlag(stat);
+            }
+            data = atoi(dataString); /*invert string to number*/
+            if (validInWordRange(data) == YES){
+                addData(stat -> dataTable ,stat -> DC , data); /*add data to data image*/
+                (stat -> DC)++;
+            }
+            else{
+                printMessageWithLocation(Error, stat, "Data out of range");
+                return activateErrorFlag(stat);
+            }
+        }
+        else{/*not valid number*/
+            printMessageWithLocation(Error, stat, "Invalid data");
+            return activateErrorFlag(stat);
+        }
+    }/*end while*/
+    return Data;
+}
+
+
+/*
+Parses the data string that come after the instuction .string
+params:
+char* line - the part of input line that comed after the data instruction.
+STATUS* stat - to access status info.
+returns: Info type - String if ok and Error if any found
+*/
 Info parseStringData(char* string, STATUS* stat){
     int strEndInd;
     if (strlen(string) ==0){
-        printErrorWithLocation(stat, "Missing string parameter");
+        printMessageWithLocation(Error, stat, "Missing string parameter");
         return activateErrorFlag(stat);
     }
 
@@ -72,138 +250,7 @@ Info parseStringData(char* string, STATUS* stat){
         (stat -> DC)++;
         return String; /*reminder: String is of info type. empty string is acceptable*/
     }
-    printErrorWithLocation(stat, "Invalid string");
+    printMessageWithLocation(Error, stat, "Invalid string");
     return activateErrorFlag(stat);
 
-}
-
-
-/*assuming attr2 is used only for extern and entry attributes*/
-Info parseExtern(char* line, STATUS* stat){
-    SYMBOL* symBody;
-
-    if (isEmptyString(line)){
-        printErrorWithLocation(stat, "Missing parameter after .extern instruction");
-        return activateErrorFlag(stat);
-    }
-    if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
-        printErrorWithLocation(stat, "Too many parameters after .extern instruction");
-        return activateErrorFlag(stat);
-    }
-    if (isValidAsSymbol(line, stat) == Error){
-        printErrorWithLocation(stat, "Invalid symbol after .extern instruction");
-        return activateErrorFlag(stat);
-    }
-    symBody = lookupSymbol(stat->symbolTable , line);
-
-    if (symBody != NULL){ /*Found in symbol table*/
-        if (symBody -> attr2 == Entry ){ /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
-            printErrorWithLocation(stat,"Symbol can't be assigned both extern and entry");
-            return activateErrorFlag(stat);
-        }
-        symBody -> attr2 = Extern; /*DEBUG???*/
-    }
-    else addSymbol(stat-> symbolTable, 0 /*address value*/,  line/*label*/, Empty /*attr1*/, Extern /*attr2*/,  stat);
-
-    return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
-}
-
-
-/*
-Searches for valid parameter (symbol) after .entry instruction.
-Prints out error messages if rest of text after entry, is invalid.
-params:
-char* line -string that contains the rest of line after
-the entry instruction, trimmed from heading and tailing whitespaces
-STATUS* stat - for easy access to status parameters as lineNumber and symbolTable
-returns:
-Info type as Error if found any, or Yes, if entry instruction line is all valid.
-*/
-Info parseEntry(char* line, STATUS* stat){
-    SYMBOL* symBody; /* To hold the body of lookedup the symbol */
-
-    if (isEmptyString(line)){
-        printErrorWithLocation(stat,"Missing parameter after .entry instruction");
-        return activateErrorFlag(stat);
-    }
-    if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
-        printErrorWithLocation(stat, "Too many parameters after .entry instruction");
-        return activateErrorFlag(stat);
-    }
-    if (isValidAsSymbol(line, stat) == Error){
-        printErrorWithLocation(stat, "Invalid symbol after .entry instruction");
-        return activateErrorFlag(stat);
-    }
-    symBody = lookupSymbol(stat->symbolTable , line);
-
-    if(symBody == NULL){
-        printErrorWithLocation(stat, "Entry symbol not defined");
-        return activateErrorFlag(stat);
-    }
-    else if (symBody -> attr2 == Extern){
-    /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
-            printErrorWithLocation(stat, "Symbol can't be both extern and entry");
-            return activateErrorFlag(stat);
-        }
-    symBody -> attr2 = Entry;
-    return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
-}
-
-
-/*
-
-
-*/
-Info parseNumbersData(char* line, STATUS* stat){
-    int cursor = 0;
-    short data;
-    char dataString[MAX_LINE];
-    /*fprintf(stderr,"[DEBUG] in parsedata --%s--\n",line);*/
-
-    while (line[0] != '\0'){
-        trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
-
-        if (externalCommas(line)){
-            printErrorWithLocation(stat, "Invalid commas");
-            return activateErrorFlag(stat);
-        }
-        cursor =  firstPosOfChar(line, COMMA); /*find the first colon position returns -1 if no comma found*/
-        if (cursor != NOT_FOUND) { /*case comma found in data */
-            strncpy(dataString, line ,cursor); /*take a piece of string up to comma, into dataString*/
-            dataString[cursor] = '\0';
-            trimWhiteSpaces(dataString); /*trim whitespaces from the piece of datastring*/
-            trimNchars(line, cursor+1); /*remove the data string piece from line*/
-        }
-        else { /*case no commas in rest of line*/
-                strcpy(dataString, line);
-                emptyString(line);
-            }
-        if (isEmptyString(dataString) == Yes){
-            printErrorWithLocation(stat, "Missing paramerer(s) for data");
-            return activateErrorFlag(stat);
-        }
-
-        /*now we have a dataString that is supposed to be a data item*/
-        if (isValidAsNumber(dataString) ){ /*check if all charachters are numbers (plus optional sign at the beginning)*/
-            if (firstPosOfChar(dataString, DECIMAL_POINT) != NOT_FOUND){
-                printErrorWithLocation(stat,"Fractions anf Floating point are not supported");
-                return activateErrorFlag(stat);
-            }
-            data = atoi(dataString); /*invert string to number*/
-            if (validInWordRange(data) == YES){
-                addData(stat -> dataTable ,stat -> DC , data); /*add data to data image*/
-                (stat -> DC)++;
-            }
-            else{
-                printErrorWithLocation(stat, "Data out of range");
-                return activateErrorFlag(stat);
-            }
-        }
-        else{/*not valid number*/
-            printErrorWithLocation(stat, "Invalid data");
-            stat -> errorExists = Yes;
-            return Error;
-        }
-    }/*end while*/
-    return Data;
 }

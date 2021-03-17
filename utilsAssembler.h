@@ -21,12 +21,12 @@ returns: int YES/NO macro - if the line is empty or comment , returned YES, othe
 int toIgnore(char* line);
 
 /*
-Prints an error message with a unified format
+Prints an error/warning message with a unified format
 params:
 STATUS* stat - for easy access to status info
 char* message - ths message string to print
 */
-void printErrorWithLocation(STATUS* stat, char* message);
+void printMessageWithLocation(Info type, STATUS* stat, char* message);
 
 
 /*

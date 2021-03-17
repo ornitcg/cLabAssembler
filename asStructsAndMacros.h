@@ -1,9 +1,24 @@
+/*
+Author: Ornit Cohen Gindi
+This file contains assembler structures:
+structures used for building the symbol, code and data tables,
+
+status structure that contains the data to be passed in one param to functions.
+each structure is followed by its functions prototypes.
+
+enum Info type definition - all in one, for better communication between funcions.
+
+macros to define lists of reserved words and registers.
+
+command table is also defined here as an array of structures using a macro. it contains all info that has to do with each command.
+I chose this way because it is a read-only table, and it's easier and less messy to build it  using one line of code in a small function.
+*/
+
 #ifndef _STRUCT_AND_MAC_
 #define _STRUCT_AND_MAC_
 
 #include "linkedList.h"
 #include "utilsGeneral.h"
-
 
 #define MAX_LINE 81
 #define MAX_LABEL 32
@@ -21,11 +36,14 @@
 #define RELATIVE_IDENTIFIER '%'
 
 /*Info contains a bunch of word that are helpfull for readability*/
-enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1', Relative ='2' , Register ='3' ,Error = -1, No =0, Yes=1, Ok=2, Source=3, Dest=4, Code =5, Data=6, String=7,  Entry=8 , Extern=9 , Empty = '_'  , FillLater ='?' };
-
+enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1' , Relative ='2' , Register ='3', Error = -1 , Warning  = -2 , No =0 , Yes=1 , Ok=2 , Source=3 , Dest=4 , Code =5 , Data=6 , String=7 ,  Entry=8 , Extern=9 , Empty = '_'  , FillLater ='?' };
+/* The numeric values in this enum are arbitraily chosen*/
 typedef enum Info Info;
 
-
+/*
+Contains all the status info to pass from hand to hand in one paramter
+for easy communication between functions.
+*/
 typedef struct STATUS{
     unsigned int IC;
     unsigned int DC;
@@ -45,23 +63,101 @@ typedef struct STATUS{
     LinkedList* dataTable;          /*starting a linked list*/
 } STATUS;
 
+/*
+Initializes the STATUS structure for the current fileName
+params:
+STATUS* stat - pointer to the status structure to be initiallized
+char* fileName - string of the current file name without extention
+*/
 void initStatus(STATUS* stat, char* fileName);
+
+/* Resets part of the field in status struct, for every line of the input file*/
 void resetStatStructForLine(STATUS* stat);
+
+/*
+Resets lineNumber to 1
+*/
 void resetLineNumber(STATUS* stat);
+
+
+/*
+Turns the errorExists flag in STATUS  to Yes, once an error is Found
+params:
+STATUS* stat - in which the flag is a field
+returns:
+Info type Error value
+*/
 Info activateErrorFlag(STATUS* stat);
+
+
+/*
+Gets the address type of the given type of operand.
+params:
+Info opType - source (Source) operand or destination (Dest) operand
+STATUS* stat - in which the current operands address types are fields
+returns:
+Info type - address type values of operands: Immediate/Direct/Relative/Register
+*/
 Info getAddressType(Info opType,STATUS* stat);
+
+
+
+/*
+Frees all the mallocs of the linked lists of the three tables that stat holds
+params:
+STATUS* stat - pointer to STATUS that holds the malloced linked lists
+*/
 void freeMemory(STATUS* stat);
 
 /**************************************************SYMBOL TABLE*****************************************/
+/*
+code image structure  with all the relevant fields for one symbol
+to be linked as the symbol table.
+*/
 typedef struct SYMBOL {
     short address;
     enum Info attr1;
     enum Info attr2; /*sometimes there maybe 2 attributes*/
 } SYMBOL;
 
+
+/*
+Adds a symbol to symbolTable
+params: symbolTable - LinkedList pointer
+short address - the address of the symbol
+char* symbol - the label itself
+Info attr1 - attributes Data/Code
+Info attr2 - attributes Extern/Entry
+STATUS* stat - pointer to statust structure, for easy access to current line number in input
+*/
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat);
+
+
+
+/*
+Searches through the symbol table for a given label (symbol)
+params:
+LinkedList* symbolTable - the able to search within.
+char* symbol - the sembol to lookup.
+returns: SYMBOL* - pointer to SYMBOL structure that has all the relevant dat fields of the  required symbol.
+if none found , returns NULL
+*/
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol);
+
+/*
+Updates The symbol table at the end of the first scan
+wherever there is a symbol that is related to dataTable ,its
+ address should be shifted with the size of ICF
+  */
 void updateSymbolTable(STATUS* stat);
+
+/*
+Gets the bunch of fields of a SYMBOL structure
+params:
+Node* cursor -  pointer to head of symbolTable linkedList
+returns:
+SYMBOL* - pointer to the SYMBOL structure which is a field in Node
+*/
 SYMBOL* getSymbolBody (Node* cursor);
 
 
@@ -71,6 +167,11 @@ params: STATUS* stat - for easy access to status info
  */
 void updateDataTable(STATUS* stat);
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
+
+/*
+code image structure  with all the relevant fields for one word
+to be linked as the code table.
+*/
 typedef struct CODE_IMG {
     Info comment;
     int lineNumber;
@@ -79,22 +180,59 @@ typedef struct CODE_IMG {
     Info ARE;
 } CODE_IMG;
 
+
+/*
+    Adds the code into the matching structure and linkedList.
+    params:
+    LinkedList* codeTable
+    short address - the address of the current word, to be printed into the object file
+    int lineNumber - the number of relevent line in the input file
+    Info comment - other info that helps filling ithis table in the second scan
+    char* label - if the current word is for a label, then this parameter contains the label string and stays empty otherwise
+    short code - the word required in the object file
+    Info ARE - the charachter 'A','E','E'  as required in the output object file , or FillLater if the character is not known yet -
+ */
 void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE);
+
+
+/*
+Gets the bunch of fields of a CODE_IMG structure
+params:
+Node* cursor -  pointer to head node of codeTable linkedList.
+returns:
+CODE_IMG* - pointer to the CODE_IMG structure which is a field in Node
+*/
 CODE_IMG* getCodeImageBody (Node* cursor);
 /*********************************************DATA TABLE*******************************************************/
-/*typedef struct DATA_IMG {
-    short data;
-    Info ARE;
-} DATA_IMG;
-void addData(LinkedList* dataTable, short address, short data, Info ARE);*/
-
+/*
+data image siple since there is only one field of value (the key is on the data structure)
+to be linked as the data table.
+*/
 typedef short  DATA_IMG;
 
+
+
+
+/*
+    Adds the data into the matching structure and linkedList.
+    params:
+    LinkedList* dataTable
+    short address - the address of the current word, to be printed into the object file
+    short data - the word required in the object file
+ */
 void addData(LinkedList* dataTable, short address, short data);
+
+/*
+Gets the data value in the data table
+params:
+Node* cursor -  pointer to head of codeTable linkedList
+returns:
+CODE_IMG* - pointer to the body - data value is a field in Node
+*/
 DATA_IMG* getDataImageBody (Node* cursor);
 
 
-/*****************************************COMMAND (x) TABLE*********************************************/
+/***************************************** Macro lists for reserved words and registers*********************************************/
 
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/
 #define SET_REG_ARR(x)  regArr x = {"r0","r1","r2", "r3","r4","r5","r6","r7"}
@@ -102,7 +240,7 @@ typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers n
 typedef char reservedArr[5][MAX_LABEL] ; /*for array of registers names*/
 #define SET_RESERVED_ARR(x)  reservedArr x = {"data", "string", "entry","extern", "NULL"};
 
-#define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}
+/*#define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}*/
 /*#define char otherReserved*/
 /*****************************************COMMAND (x) TABLE*********************************************/
 
@@ -115,7 +253,11 @@ typedef struct CMD{
     char opDest[4];
     char command[MAX_CMD_LEN];
 } CMD;
-
+/*
+opSrc and opDest define the allowed types of addressing types for each type of operand, for each command
+empty string means noaddressing type(or no operand) allowed as source or destination
+The rason for this macro is explained at the top of this file.
+*/
 #define SET_COMMAND_TABLE(x) CMD x[16];\
   x[0].opcode=0; x[0].funct=0; x[0].operands=2; strcpy(x[0].opSrc , "013") ; strcpy(x[0].opDest,"13"); strcpy(x[0].command, "mov");\
   x[1].opcode=1; x[1].funct=0; x[1].operands=2; strcpy(x[1].opSrc ,"013"); strcpy(x[1].opDest ,"013");strcpy(x[1].command, "cmp");\

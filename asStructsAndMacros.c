@@ -12,9 +12,14 @@ Group of functions that deal with assembler data structures as init, add and loo
 
 
 
-/* searches through the symbol table for a given label (symbol)
-if the labels is found, its other attributes are returnded with pointer
-otherwise , returns NULL*/
+/*
+Searches through the symbol table for a given label (symbol)
+params:
+LinkedList* symbolTable - the able to search within.
+char* symbol - the sembol to lookup.
+returns: SYMBOL* - pointer to SYMBOL structure that has all the relevant dat fields of the  required symbol.
+if none found , returns NULL
+*/
 SYMBOL* lookupSymbol(LinkedList* symbolTable, char* symbol){
     Node* cursor = symbolTable -> head;
     while (cursor != NULL) {
@@ -89,9 +94,6 @@ Info getAddressType(Info opType,STATUS* stat){
 }
 
 
-
-
-
 /* Resets part of the field in status struct, for every line of the input file*/
 void resetStatStructForLine(STATUS* stat){
     stat -> lineNumber ++;
@@ -105,7 +107,7 @@ void resetStatStructForLine(STATUS* stat){
 
 
 /*
-Sets lineNumber
+Resets lineNumber to 1
 */
 void resetLineNumber(STATUS* stat){
     stat -> lineNumber =1;
@@ -124,7 +126,7 @@ STATUS* stat - pointer to statust structure, for easy access to current line num
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat){
     SYMBOL body;
     if (lookupSymbol(symbolTable, symbol) != NULL){
-        printErrorWithLocation(stat, "Label is already in symbol table");
+        printMessageWithLocation(Error, stat, "Label is already in symbol table");
         activateErrorFlag(stat);
     }
     body.address = address;
@@ -132,7 +134,6 @@ void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1,
     body.attr2 = attr2;
     appendNode( 0 , symbol , &body, symbolTable);
 }
-
 
 
 /*
@@ -147,11 +148,11 @@ SYMBOL* getSymbolBody (Node* cursor){
 }
 
 
-
-
-/* Updates The symbol table at the end of the first pass
-wherever there is a symbol that is related to dataTableits
- address should be shifted with the size of ICF */
+/*
+Updates The symbol table at the end of the first scan
+wherever there is a symbol that is related to dataTable ,its
+ address should be shifted with the size of ICF
+  */
 void updateSymbolTable(STATUS* stat){
     Node* cursor = stat -> symbolTable -> head;
     SYMBOL* body;
@@ -169,11 +170,17 @@ void updateSymbolTable(STATUS* stat){
 }
 
 
-
-
-
-
-
+/*
+    Adds the data into the matching structure and linkedList.
+    params:
+    LinkedList* codeTable
+    short address - the address of the current word, to be printed into the object file
+    int lineNumber - the number of relevent line in the input file
+    Info comment - other info that helps filling ithis table in the second scan
+    char* label - if the current word is for a label, then this parameter contains the label string and stays empty otherwise
+    short code - the word required in the object file
+    Info ARE - the charachter 'A','E','E'  as required in the output object file , or FillLater if the character is not known yet -
+ */
 void addCode(LinkedList* codeTable, short address, int lineNumber, Info comment, char* label, short code, Info ARE){
     CODE_IMG body;
     strcpy(body.label, label);
@@ -198,14 +205,19 @@ CODE_IMG* getCodeImageBody (Node* cursor){
 
 
 
-
+/*
+    Adds the data into the matching structure and linkedList.
+    params:
+    LinkedList* dataTable
+    short address - the address of the current word, to be printed into the object file
+    short data - the word required in the object file
+ */
 void addData(LinkedList* dataTable, short address, short data/*, Info ARE*/){
     DATA_IMG body = data;
-
-    /*body.data = data;*/
-    /*body.ARE = ARE;*/
     appendNode(address, EMPTY_STRING,  &body, dataTable);
 }
+
+
 
 /*
 Gets the bunch of fields of a DATA_IMG structure
@@ -217,6 +229,8 @@ DATA_IMG* - pointer to the DATA_IMG structure which is a field in Node
 DATA_IMG* getDataImageBody (Node* cursor){
     return (DATA_IMG*)(cursor -> body);
 }
+
+
 
 /*
 Frees all the mallocs of the linked lists of the three tables that stat holds
