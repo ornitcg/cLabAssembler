@@ -156,7 +156,7 @@ int num - the number to check.
 returns:
 int - (macro)  YES if it is and NO otherwise
 */
-int validInWordRange(int num){
+int isValidInWordRange(int num){
     if(num >= -2048 && num <= 2047)
         return YES;
     return NO;

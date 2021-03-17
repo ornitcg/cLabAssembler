@@ -32,10 +32,12 @@ Info  parseInstruction(char* instruction , char* line, STATUS* stat){
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, WHITE_SPACE); /*find the first whitespace position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND))
-        return No;
+        strcpy(instruction, line); /*no space, probably an error, get the while line instruction and continue to look for error*/
+    else{
+        strncpy(instruction, line, cursor ); /*get the string part until the whitespace into instruction*/
+        instruction[cursor] = '\0';
+    }
 
-    strncpy(instruction, line, cursor ); /*get the string part until the whitespace into instruction*/
-    instruction[cursor] = '\0';
     if (instruction[0] == INSTRUCTION_IDENTIFIER){
         if (strcmp(instruction, ".data") == 0) return Data;
         if (strcmp(instruction, ".string") == 0) return String;
@@ -62,8 +64,7 @@ assuming attr2 is used only for extern and entry attributes
 */
 Info parseExtern(char* line, STATUS* stat){
     SYMBOL* symBody;
-
-    if (isEmptyString(line)){
+    if (isEmptyString(line) == Yes){
         printMessageWithLocation(Error, stat, "Missing parameter after .extern instruction");
         return activateErrorFlag(stat);
     }
@@ -82,7 +83,7 @@ Info parseExtern(char* line, STATUS* stat){
             printMessageWithLocation(Error, stat,"Symbol can't be assigned both extern and entry");
             return activateErrorFlag(stat);
         }
-        symBody -> attr2 = Extern; /*DEBUG???*/
+        symBody -> attr2 = Extern;
     }
     else addSymbol(stat-> symbolTable, 0 /*address value*/,  line/*label*/, Empty /*attr1*/, Extern /*attr2*/,  stat);
 
@@ -104,18 +105,6 @@ Info type as Error if found any, or Yes, if entry instruction line is all valid.
 Info parseEntry(char* line, STATUS* stat){
     SYMBOL* symBody; /* To hold the body of lookedup the symbol */
 
-    if (isEmptyString(line)){
-        printMessageWithLocation(Error, stat,"Missing parameter after .entry instruction");
-        return activateErrorFlag(stat);
-    }
-    if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
-        printMessageWithLocation(Error, stat, "Too many parameters after .entry instruction");
-        return activateErrorFlag(stat);
-    }
-    if (isValidAsSymbol(line, stat) == Error){
-        printMessageWithLocation(Error, stat, "Invalid symbol after .entry instruction");
-        return activateErrorFlag(stat);
-    }
     symBody = lookupSymbol(stat->symbolTable , line);
 
     if(symBody == NULL){
@@ -129,6 +118,35 @@ Info parseEntry(char* line, STATUS* stat){
         }
     symBody -> attr2 = Entry;
     return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
+    
+}
+
+
+
+/*
+Checks if entry instruction is written corrrect
+relevant to first scan.
+params:
+char* line - the rest of line after instruction, to check.
+STSTUS* stat - fo error flag.
+returns: Ok if no error found, and Error otherwise
+*/
+Info checkEntrySyntax(char* line, STATUS* stat){
+
+    if (isEmptyString(line) == YES){
+        printMessageWithLocation(Error, stat,"Missing parameter after .entry instruction");
+        return activateErrorFlag(stat);
+    }
+    if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
+        printMessageWithLocation(Error, stat, "Too many parameters after .entry instruction");
+        return activateErrorFlag(stat);
+    }
+    if (isValidAsSymbol(line, stat) == Error){
+        printMessageWithLocation(Error, stat, "Invalid symbol after .entry instruction");
+        return activateErrorFlag(stat);
+    }
+    return Ok;
+
 }
 
 
@@ -203,7 +221,7 @@ Info parseNumbersData(char* line, STATUS* stat){
                 return activateErrorFlag(stat);
             }
             data = atoi(dataString); /*invert string to number*/
-            if (validInWordRange(data) == YES){
+            if (isValidInWordRange(data) == YES){
                 addData(stat -> dataTable ,stat -> DC , data); /*add data to data image*/
                 (stat -> DC)++;
             }

@@ -14,6 +14,13 @@
 
 #define MAX_STR 81
 
+
+/*
+Checks if any arguments were inserted
+if no filenames are given, the programs exits.
+params:
+int argc - the number of cmd arguments (called by main)
+*/
 void checkNumOfCommandLineArgs(int argc);
 
 /*

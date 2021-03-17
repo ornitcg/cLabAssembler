@@ -1,14 +1,17 @@
+
+
+
 /*
-  Checks the possibility of the line to contain a label by searching for a ':'
-  params:   char* line - the string to search for a label in
-  returns:   1 if found, and 0 otherwise
+Finds a definition of symbol at beggining of line.
+params:
+
+char* line - the line to search within.
+STATUS* stat - for easy access to status info at error messages
+returns - Info (enum) Yes if a valid symbol was found, the defined symbol then in added to status
+                     No - if no symbol was found
+                     Error - if error found
 */
-int containsLabelDef(char* line);
-
-
-
-
-Info parseSymbol(char* symbol , char* line, STATUS* stat);
+Info parseSymbol(char* line, STATUS* stat);
 
 
 /*
@@ -23,5 +26,12 @@ int validSymbolChars(char* symbol);
 
 
 
-
+/*
+Checks if a given string is valid as a symbol.
+params:
+char* string - the string to check if valid as symbol
+STATUS* stat - for easy access to status info used in error messages
+returns: Info type - Yes if string is valid as symbol, and Error otherwise
+assumes string is a whole symbol without whitespaces. if there are any it's an error
+*/
 Info isValidAsSymbol(char* string, STATUS* stat);

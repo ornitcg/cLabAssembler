@@ -23,7 +23,7 @@ Allowing no whitespaces between the colon of a label definition and the next thi
  since it was up to me - approved by JUDY ISSACS
 No floating point allowed even if the operand is still a whole number
 Ignoring the assumptin of 4096 words in RAM - approved by JUDY ISSACS
-Not allowing data numbers that  the range of signed 12 bits. 
+Not allowing data numbers that  the range of signed 12 bits.
 If any error is found in the first scan, second scan will not occure.
 
 */
@@ -47,7 +47,6 @@ char* fileName - the current fileName (to be used for output files names)
 */
 void runAssembler(FILE* inputFile, char* fileName){
     STATUS stat;
-    /*removeExtention(fileName);*/
     initStatus(&stat, fileName); /*to contain status details of current line*/
     firstScan(inputFile, &stat);
     fseek(inputFile,0,SEEK_SET);
@@ -76,10 +75,10 @@ int main(int argc, char *argv[]) {
 
   for(i= 1 ; i < argc ; i++){
     fileName = argv[i];
-    printf("[DEBUG] The file  name  %s\n", fileName);
     inputFile = isValidFile(fileName, EXT_AS);  /*input file contains a pointer to the opened file*/
     if (inputFile != NULL) {
         runAssembler(inputFile, fileName);
+
     }
   }
 

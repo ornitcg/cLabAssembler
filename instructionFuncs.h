@@ -62,6 +62,20 @@ Info parseExtern(char* line, STATUS* stat);
 
 
 
+
+
+/*
+Checks if entry instruction is written corrrect
+relevant to first scan.
+params:
+char* line - the rest of line after instruction, to check.
+STSTUS* stat - fo error flag.
+returns: Ok if no error found, and Error otherwise
+*/
+Info checkEntrySyntax(char* line, STATUS* stat);
+
+
+
 /*
 Searches for valid parameter (symbol) after .entry instruction.
 Prints out error messages if rest of text after entry, is invalid.

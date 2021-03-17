@@ -28,6 +28,7 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     int ind;
     /* At this point , line is clean of heading whitespaces */
     int cursor;
+
     strcpy(command, EMPTY_STRING);                       /*initialization of command string*/
 
     if (isEmptyString(line) == YES){
@@ -93,7 +94,6 @@ void parseCommandOperands(char* line, STATUS* stat){
         errorStatus = Error;
 
     if (errorStatus == Ok ){
-
         /*if (opNumFound == 0 && opNumAllowed == 0)*/ /*no operand expected, and 0 received*/
         addFirstWord(opNumFound, stat);
         if(opNumFound > 0 && opNumFound == opNumAllowed){
@@ -270,8 +270,14 @@ Info operandAddressType(char* operand,  STATUS* stat){
 
     if (operand[0] == IMMEDIATE_IDENTIFIER){ /*check if operand is Immediate*/
         operand++;
-        if (isValidAsNumber(operand))
-            return Immediate;
+        if (isValidAsNumber(operand)){
+            if (isValidInWordRange(atoi(operand)) == Yes)
+                return Immediate;
+            else {
+                printMessageWithLocation(Error, stat, "Operand value is out of word range");
+                return activateErrorFlag(stat);
+            }
+        }
         printMessageWithLocation(Error, stat, "Operand is invalid as Immediate");
         return activateErrorFlag(stat);
     }

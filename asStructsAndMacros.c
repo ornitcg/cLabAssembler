@@ -1,5 +1,6 @@
-/* Author:
-Group of functions that deal with assembler data structures as init, add and lookup */
+/* Author: Ornit Cohen Gindi
+Group of functions that deal with assembler data structures as init, add and lookup
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -109,7 +110,7 @@ void resetStatStructForLine(STATUS* stat){
 /*
 Resets lineNumber to 1
 */
-void resetLineNumber(STATUS* stat){
+void resetforSecondScan(STATUS* stat){
     stat -> lineNumber =1;
 }
 
@@ -152,6 +153,7 @@ SYMBOL* getSymbolBody (Node* cursor){
 Updates The symbol table at the end of the first scan
 wherever there is a symbol that is related to dataTable ,its
  address should be shifted with the size of ICF
+ params: STATUS* stat - to access symbolTable
   */
 void updateSymbolTable(STATUS* stat){
     Node* cursor = stat -> symbolTable -> head;

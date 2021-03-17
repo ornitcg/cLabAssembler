@@ -36,7 +36,7 @@ I chose this way because it is a read-only table, and it's easier and less messy
 #define RELATIVE_IDENTIFIER '%'
 
 /*Info contains a bunch of word that are helpfull for readability*/
-enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1' , Relative ='2' , Register ='3', Error = -1 , Warning  = -2 , No =0 , Yes=1 , Ok=2 , Source=3 , Dest=4 , Code =5 , Data=6 , String=7 ,  Entry=8 , Extern=9 , Empty = '_'  , FillLater ='?' };
+enum Info {A = 'A' , R = 'R' ,E = 'E' , Immediate = '0', Direct ='1' , Relative ='2' , Register ='3', Error = -1 , Warning  = -2 , No =0 , Yes=1 , Ok=2 , Source=3 , Dest=4 , Code =5 , Data=6 , String=7 ,  Entry=8 , Extern=9 , Empty = '_'  , FillLater ='?' , First = 'F', Second = 'S' };
 /* The numeric values in this enum are arbitraily chosen*/
 typedef enum Info Info;
 
@@ -45,7 +45,7 @@ Contains all the status info to pass from hand to hand in one paramter
 for easy communication between functions.
 */
 typedef struct STATUS{
-    unsigned int IC;
+    unsigned int IC; /*chose int to enable more than 4095 words*/
     unsigned int DC;
     unsigned int ICF;
     unsigned int DCF;
@@ -77,7 +77,7 @@ void resetStatStructForLine(STATUS* stat);
 /*
 Resets lineNumber to 1
 */
-void resetLineNumber(STATUS* stat);
+void resetforSecondScan(STATUS* stat);
 
 
 /*
@@ -166,6 +166,8 @@ data symbol is given a shift at the size of ICF
 params: STATUS* stat - for easy access to status info
  */
 void updateDataTable(STATUS* stat);
+
+
 /*****************************************CODE (INSTRUCTIONS)TABLE ***************************************/
 
 /*
@@ -211,8 +213,6 @@ to be linked as the data table.
 typedef short  DATA_IMG;
 
 
-
-
 /*
     Adds the data into the matching structure and linkedList.
     params:
@@ -221,6 +221,7 @@ typedef short  DATA_IMG;
     short data - the word required in the object file
  */
 void addData(LinkedList* dataTable, short address, short data);
+
 
 /*
 Gets the data value in the data table
@@ -242,6 +243,7 @@ typedef char reservedArr[5][MAX_LABEL] ; /*for array of registers names*/
 
 /*#define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}*/
 /*#define char otherReserved*/
+
 /*****************************************COMMAND (x) TABLE*********************************************/
 
 /*This is the table of 16 commands, to be defined int the first pass function using macro*/

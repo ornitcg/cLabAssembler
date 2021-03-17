@@ -11,7 +11,12 @@ and not dependent on assembler related files.
 #include <stdlib.h>
 #include "utilsGeneral.h"
 
-
+/*
+Checks if any arguments were inserted
+if no filenames are given, the programs exits.
+params:
+int argc - the number of cmd arguments (called by main)
+*/
 void checkNumOfCommandLineArgs(int argc){
     if (argc == 1){
       printf("[Error] - no arguments found\n");
@@ -124,7 +129,7 @@ char* string - the string to check if empty.
 returns int - the value of macro YES/NO
 */
 int isEmptyString(char* string){
-    if (strlen(string)==0)
+    if (strlen(string) == 0)
         return YES;
     return NO;
 }

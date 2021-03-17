@@ -24,30 +24,31 @@
 void firstScan(FILE* inputFile , STATUS* stat){
     /*********************************************** DECLARATIONS ***********************************************************/
     char line[MAX_LINE] = EMPTY_STRING;                       /*line of assembly code*/
-    char symbol[MAX_LABEL] = EMPTY_STRING;                   /*to contain the label from line*/
+    /*char symbol[MAX_LABEL] = EMPTY_STRING; */                  /*to contain the label from line*/
     char instruction[MAX_INSTRUCTION]= EMPTY_STRING;         /*to contain the label from line*/
     char command[MAX_CMD_LEN]= EMPTY_STRING;                 /*to contain the label from line*/
     Info instType;                                           /*stands for instruction type*/
     /*********************************************************************************************************/
-
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-        /*fprintf(stderr," [DEBUG] firstScan line#%d  line string: --|%s|--\n", stat->lineNumber,line);*/
+        fprintf(stderr,"\n\n [DEBUG] firstScan line#%d  line string: --|%s|--\n", stat->lineNumber,line);
         /*fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
             /*********************************** SYMBOL CHECK **************************************/
-            stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
+            parseSymbol( line, stat);  /*Yes/No/Error*/
 
               /*relevant to lines that begin with label definition*/
-            if (strlen(symbol) > 0) {
-                trimNchars(line, strlen(symbol)+1); /*restart line from end of symbol, which is empty if*/
+            if (stat -> symbolFound == Yes) {
+                trimNchars(line, strlen(stat -> label)+1); /*restart line from end of symbol, which is empty if*/
                 trimWhiteSpaces(line);
                 /*restart line from end of label, "+1" stand for the colon in the end*/
             }
             /********************************** INSTRUCTION CHECK ***********************************/
+            fprintf(stderr,"[DEBUG] in first scan error for line = %d, error exists = %d \n", stat -> errorForLine, stat-> errorExists);
+
             if (stat -> errorForLine == No){
-                instType = parseInstruction(instruction, line, stat); /*Yes/No/Error*/
+                instType = parseInstruction(instruction, line, stat); /* value returned into instType= Yes/No/Error*/
 
                 if ( instType != Error && instType != No ){
                 /*then need to cut off instruction and trim spaces from rest of line*/
@@ -56,22 +57,27 @@ void firstScan(FILE* inputFile , STATUS* stat){
                 } /*else there was a problem in finding a command*/
                 if  ( instType == Data || instType == String ){
                     if (stat -> symbolFound == Yes){
-                        addSymbol(stat -> symbolTable, stat-> DC , symbol, Data, Empty, stat);
+                        addSymbol(stat -> symbolTable, stat-> DC , stat -> label , Data, Empty, stat);
                     }
                     parseData(line, instType, stat);/*return 0 if data is wrong or None*/
                 }
                     /*if  instType == Entry do nothing*/
-                if ( instType == Extern )
+                if ( instType == Extern ){
                     if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
                         printMessageWithLocation(Warning, stat, "Label definition before .extern instruction");/*NOT ERROR*/
                         /*at this point what's left of line is the operand that passed the test of parseExtern*/
-
+                }
+                if ( instType == Entry ){
+                    if (checkEntrySyntax(line, stat) == Ok && (stat -> symbolFound == Yes )) /* will perform only syntax validity check*/
+                        printMessageWithLocation(Warning, stat, "Label definition before .extern instruction");/*NOT ERROR*/
+                        /*at this point what's left of line is the operand that passed the test of parseEntry*/
+                }
                 /*********************************COMMAND CHECK**************************************/
                 if ( stat -> errorForLine == No && instType == No ){
                     /* meaning no instruction found- proceed to parsing command and operands*/
 
                     if (stat -> symbolFound == Yes)
-                        addSymbol(stat -> symbolTable, stat->IC , symbol,  Code, Empty, stat);
+                        addSymbol(stat -> symbolTable, stat->IC , stat -> label,  Code, Empty, stat);
 
                     if (parseCommand(command, line,  stat) == Ok){
                         trimNchars(line, strlen(command)); /*restart line from end of instruction, which is empty if*/
@@ -101,21 +107,22 @@ void firstScan(FILE* inputFile , STATUS* stat){
 */
 void secondScan(FILE* inputFile, STATUS* stat){
     char line[MAX_LINE] = EMPTY_STRING;                            /*line of assembly code*/
-    char symbol[MAX_LABEL] = EMPTY_STRING;                        /*to contain the label from line*/
+    /*char symbol[MAX_LABEL] = EMPTY_STRING;              */          /*to contain the label from line*/
     char instruction[MAX_INSTRUCTION] = EMPTY_STRING;            /*to contain the label from line*/
     Info instType;                             /*stands for instruction type*/
 
     /*********************************************************************************************************/
-    resetLineNumber(stat); /* resets the input line count in status, to 1*/
+    resetforSecondScan(stat); /* resets the input line count in status, to 1*/
+
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
 
         trimWhiteSpaces(line);  /*removes whitespaces from both ends and also the '\n' for each line read from file*/
         if (!toIgnore(line) ){
             /***********************************SYMBOL CHECK**************************************/
-            stat -> symbolFound = parseSymbol(symbol, line, stat);  /*Yes/No/Error*/
+            parseSymbol( line, stat);  /*Yes/No/Error*/
               /*relevant to lines that begin with label definition*/
-            if (strlen(symbol) > 0){
-                trimNchars(line, strlen(symbol)+1); /*restart line from end of label, "+1" stand for the colon in the end*/
+            if (stat -> symbolFound == Yes){
+                trimNchars(line, strlen(stat -> label)+1); /*restart line from end of label, "+1" stand for the colon in the end*/
                 trimWhiteSpaces(line);
             }
             /**********************************INSTRUCTION CHECK***********************************/
@@ -126,9 +133,7 @@ void secondScan(FILE* inputFile, STATUS* stat){
                 trimWhiteSpaces(line);                 /*restart line from end of instruction, which is empty if*/
             } /*there was a problen in parsing*/
             if ( instType == Entry )
-                if (parseEntry(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                    printMessageWithLocation(Warning, stat, "Label definition before .entry instruction");/*NOT ERROR*/
-                    /*at this point what's left of line is the operand that passed the test of parseEntry*/
+                parseEntry(line, stat); /* now enters the actual entry check for second scan*/
         }/*end if not ignore*/
         resetStatStructForLine(stat); /*resets part of the fields, to use for next line's data*/
     }/*end while*/

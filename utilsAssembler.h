@@ -89,7 +89,7 @@ int num - the number to check.
 returns:
 int - (macro)  YES if it is and NO otherwise
 */
-int validInWordRange(int num);
+int isValidInWordRange(int num);
 
 
 
