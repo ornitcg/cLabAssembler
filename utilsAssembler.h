@@ -83,6 +83,15 @@ Info isReservedWord(char* string);
 
 
 /*
+Searches if string is a command name
+params:
+char* string - the string to check
+returns:
+int - index of the relevant command if found , and NOT_FOUND otherwise
+*/
+int lookupCommand(char* string);
+
+/*
 Checks if a given number is within range of signed 12 bits.
 params:
 int num - the number to check.

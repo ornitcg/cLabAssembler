@@ -37,7 +37,7 @@ void printMessageWithLocation( Info type ,STATUS*  stat , char* message ){
     if (type == Error)
         printf("[ERROR][File:%s Line:%d] %s\n", stat -> fileName , stat->lineNumber, message);
     else if (type == Warning)
-        printf("[WARNING][File:%s Line:%d] %s\n", stat -> fileName , stat->lineNumber, message);
+        printf("[*WARNING*][File:%s Line:%d] %s - label is ignored\n", stat -> fileName , stat->lineNumber, message);
 
 
 }
@@ -114,19 +114,36 @@ assuming input has no heading or tailing whitespaces
 */
 Info isReservedWord(char* string){
     int i = 0 ;
-    SET_RESERVED_ARR(resv);
+    SET_RESERVED_WORDS_LIST(resv);
 
     while ( strcmp(resv[i], "NULL") != 0 ){ /*end of reserved words list*/
         if (strcmp( resv[i], string) == 0)  /*case found use of reserved word*/
             return Yes;
         i++;
     }
+    if (lookupCommand(string) != NOT_FOUND)
+        return Yes;
     if (lookupRegister(string) != NOT_FOUND)
         return Yes;
     return No;
 }
 
+/*
+Searches if string is a command name
+params:
+char* string - the string to check
+returns:
+int - index of the relevant command if found , and NOT_FOUND otherwise
+*/
+int lookupCommand(char* string){
+    int i;
+    SET_COMMAND_TABLE(cmdTable);
 
+    for(i = 0; i < COMMANDS_NUMBER ; i++)
+        if(strcmp(cmdTable[i].command,string) == 0 )
+            return i;
+    return NOT_FOUND;
+}
 
 /*
 Calculates the word for operand that is not a label.

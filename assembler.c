@@ -25,7 +25,7 @@ since it was up to me - approved by JUDY ISSACS
 - Ignoring the assumptin of 4096 words in RAM - approved by JUDY ISSACS
 - Not allowing data numbers that  the range of signed 12 bits.
 - If any error is found in the first scan, second scan will not occure.
-
+- Sometimes error messages come in non chronological order since their finding depend on which scan finds them
 */
 
 #include <stdio.h>
@@ -50,12 +50,10 @@ void runAssembler(FILE* inputFile, char* fileName){
     initStatus(&stat, fileName); /*to contain status details of current line*/
     firstScan(inputFile, &stat);
     fseek(inputFile,0,SEEK_SET);
-    /*fprintf(stderr, "[DEBUG] after first scan\n");*/
 
     if (stat.errorExists == No){
         secondScan(inputFile, &stat);
     }
-    /*fprintf(stderr, "[DEBUG] after second scan\n");*/
 
     if (stat.errorExists == No)
         buildOutputFiles(&stat);

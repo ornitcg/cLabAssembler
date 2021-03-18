@@ -58,18 +58,19 @@ void firstScan(FILE* inputFile , STATUS* stat){
                     if (stat -> symbolFound == Yes){
                         addSymbol(stat -> symbolTable, stat-> DC , stat -> label , Data, Empty, stat);
                     }
-                    parseData(line, instType, stat);/*return 0 if data is wrong or None*/
+                    if (stat-> errorForLine == No )
+                        parseData(line, instType, stat);/*return 0 if data is wrong or None*/
                 }
                     /*if  instType == Entry do nothing*/
-                if ( instType == Extern ){
-                    if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
-                        printMessageWithLocation(Warning, stat, "Label definition before .extern instruction");/*NOT ERROR*/
-                        /*at this point what's left of line is the operand that passed the test of parseExtern*/
+                else if ( instType == Extern ){
+                        if (parseExtern(line, stat) == Ok && (stat -> symbolFound == Yes ))
+                            printMessageWithLocation(Warning, stat, "Label definition before .extern instruction");/*NOT ERROR*/
+                            /*at this point what's left of line is the operand that passed the test of parseExtern*/
                 }
-                if ( instType == Entry ){
-                    if (checkEntrySyntax(line, stat) == Ok && (stat -> symbolFound == Yes )) /* will perform only syntax validity check*/
-                        printMessageWithLocation(Warning, stat, "Label definition before .extern instruction");/*NOT ERROR*/
-                        /*at this point what's left of line is the operand that passed the test of parseEntry*/
+                else if ( instType == Entry ){
+                        if (checkEntrySyntax(line, stat) == Ok && (stat -> symbolFound == Yes )) /* will perform only syntax validity check*/
+                            printMessageWithLocation(Warning, stat, "Label definition before .entry instruction");/*NOT ERROR*/
+                            /*at this point what's left of line is the operand that passed the test of parseEntry*/
                 }
                 /*********************************COMMAND CHECK**************************************/
                 if ( stat -> errorForLine == No && instType == No ){
@@ -168,7 +169,6 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
         symbol = lookupSymbol(stat -> symbolTable, codeBody -> label);
         /*symbol points at the body of the symbol table link thatbelongs to the symbol
         at cursor location,if this location does not relate to a symbol, Null will be returned*/
-
         if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){
             /*any operand symbol should be found in the symbol table, thus error*/
             printMessageWithLocation(Error, stat, "Found undefined symbol");

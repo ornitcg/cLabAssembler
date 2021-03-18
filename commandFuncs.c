@@ -51,6 +51,9 @@ Info parseCommand(char* command, char* line, STATUS* stat ){
     return Ok;
 }
 
+
+
+
 /*
 Searches through line for valid command operands.
 if anything is invalid, the error flag (in stat) is turned on
@@ -60,32 +63,36 @@ STATUS* stat - for easy access to current command and line info
 */
 void parseCommandOperands(char* line, STATUS* stat){
     int opNumFound , opNumAllowed, cmdIndex = stat -> commandNumber;
-    char* opSrc = (char*)malloc(sizeof(line));
-    char* opDest = (char*)malloc(sizeof(line));
+    char* opSrc ;
+    char* opDest ;
     Info errorStatus = Ok; /*instead of addressing*/
     SET_COMMAND_TABLE(cmd);
     opNumAllowed = cmd[cmdIndex].operands;          /*for readability*/
 
+    if(externalCommas(line) || countChar(line, COMMA) > 1){ /*comma before first operand or after last operand are not allowed*/
+        printMessageWithLocation(Error, stat,"Extra comma found");
+        /*Allowed By Judy Issacs to generalize the type of Error*/
+        activateErrorFlag(stat);
+        return;
+    }
     /*Searching for operands blindly, Errors are checked later*/
+    opSrc = (char*)malloc(sizeof(line));
+    opDest = (char*)malloc(sizeof(line));
     opNumFound = getOperands(line, opSrc, opDest, stat); /*operands will be empty if not found*/
 
     /*saves the address types (Immediate/Direct/Relative/Register) found , for each operand, into status*/
     stat -> srcOpAddressType = operandAddressType(opSrc , stat);
     stat -> destOpAddressType = operandAddressType(opDest , stat);
 
-    if(externalCommas(line)){ /*comma before first operand or after last operand are not allowed*/
-        printMessageWithLocation(Error, stat,"Extra comma found");
-        /*Allowed By Judy Issacs to generalize the type of Error*/
-        errorStatus = Error;
-    }
+
     /*less operand than expected (assuming that if missing comma the whole string is received as one operand (most likely with spaces but I chose to look at it as a missing operand error))*/
-    else if ((opNumFound < opNumAllowed )){
+    if (opNumFound < opNumAllowed ){
         printMessageWithLocation(Error, stat, "Missing Operand(s)");
         errorStatus = Error;
     }
     /*got more operands than expected*/
-    else if ((opNumAllowed  < opNumFound)){
-        printMessageWithLocation(Error, stat, "Too many operands");
+    else if ((opNumFound!=NOT_FOUND) && (opNumAllowed  < opNumFound)){
+        printMessageWithLocation(Error, stat, "Found too many operands");
         /*Allowed By Judy to generalize the type of Error*/
         errorStatus = Error;
     }
@@ -112,6 +119,53 @@ void parseCommandOperands(char* line, STATUS* stat){
     free(opDest);
 }
 
+
+
+/*
+Helper function called by parseCommandOperands only.
+Parses 0/1/2 operands from parameter line
+fits them into parameters opSrc and opDest regardless of their validity as operands
+errors are checked by the calling functions
+params:
+char* line - the input line after removal of the command string
+char* opSrc - a string to collect the source operand if found.
+char* opDest - a string to collect the destination operand if found.
+STATUS* stat - for easy access to line number
+returns number of operand found or NO_FOUND-if commas errors are found
+*/
+int getOperands(char* line,char* opSrc,char* opDest, STATUS* stat){
+    int posComma = firstPosOfChar(line,COMMA);
+    strcpy(opSrc, EMPTY_STRING);    /*default*/
+    strcpy(opDest, EMPTY_STRING); /*default*/
+
+    if (strlen(line) == 0 ) /*empty input, no operands*/
+        return 0;
+
+    if (posComma == NOT_FOUND){
+        /* no comma so line is considered as one operand, assingned for Dest operand, Error checks are done in the calling function*/
+        strcpy(opDest,line);
+        return 1;
+    }
+    else { /*there is a comma so more than one operand expected*/
+
+        strncpy(opSrc,line,posComma);   /*insert first operand into opSrc*/
+        opSrc[posComma] = '\0';
+        trimNchars(line , posComma+1); /*remove the taken operand, from line*/
+        trimWhiteSpaces(opSrc);  /*remove whitespaces around the operand found*/
+        trimWhiteSpaces(line);    /*remove whitespaces around the rest of line*/
+
+        if (firstPosOfChar(line, COMMA) != NOT_FOUND){ /*if any comma is found at this point this is an error*/
+            /*printMessageWithLocation(Error, stat, "Found too many operands");*/
+            activateErrorFlag(stat);
+            return 3; /* error since 2  operands are expected*/
+        }
+        if (strlen(line) == 0) /*no comma but also nothing else is left in line */
+            return 1; /* if error, it is  checked by the calling function*/
+
+        strcpy(opDest,line); /*the rest of line is taken as Dest operand*/
+        return 2;
+    }
+}
 
 
 
@@ -173,54 +227,6 @@ void addOperandWord(char* operand, Info opType, STATUS* stat){ /*opType is sourc
 }
 
 
-/*
-Helper function called by parseCommandOperands only.
-Parses 0/1/2 operands from parameter line
-fits them into parameters opSrc and opDest regardless of their validity as operands
-errors are checked by the calling functions
-params:
-char* line - the input line after removal of the command string
-char* opSrc - a string to collect the source operand if found.
-char* opDest - a string to collect the destination operand if found.
-STATUS* stat - for easy access to line number
-returns number of operand found
-*/
-int getOperands(char* line,char* opSrc,char* opDest, STATUS* stat){
-    int posComma = firstPosOfChar(line,COMMA);
-    strcpy(opSrc, EMPTY_STRING);    /*default*/
-    strcpy(opDest, EMPTY_STRING); /*default*/
-
-    if (strlen(line) == 0 ) /*empty input, no operands*/
-        return 0;
-
-    if (posComma == NOT_FOUND){
-        /* no comma so line is considered as one operand, assingned for Dest operand, Error checks are done in the calling function*/
-        strcpy(opDest,line);
-        return 1;
-    }
-    else { /*there is a comma so more than one operand expected*/
-
-        strncpy(opSrc,line,posComma);   /*insert first operand into opSrc*/
-        opSrc[posComma] = '\0';
-        trimNchars(line , posComma+1); /*remove the taken operand, from line*/
-        trimWhiteSpaces(opSrc);  /*remove whitespaces around the operand found*/
-        trimWhiteSpaces(line);    /*remove whitespaces around the rest of line*/
-
-        if (firstPosOfChar(line, COMMA) != NOT_FOUND){ /*if any comma is found at this point this is an error*/
-            /*printMessageWithLocation(Error, stat, "Found too many operands");*/
-            activateErrorFlag(stat);
-            return 1; /* error since 2  operands are expected*/
-        }
-        if (strlen(line) == 0) /*no comma but also nothing else is left in line */
-            return 1; /* if error, it is  checked by the calling function*/
-
-        strcpy(opDest,line); /*the rest of line is taken as Dest operand*/
-        return 2;
-    }
-}
-
-
-
 
 /*
 Gets an operand and its type as Source or Dest
@@ -249,11 +255,14 @@ Info isValidAddressing(char* operand, Info opType, STATUS* stat){
     else if (opType == Source)
         res = firstPosOfChar(cmd[cmdIndex].opSrc, addressType);
     if (res == NOT_FOUND){
-        printMessageWithLocation(Error, stat, "Invalid adressing type op operand");
+        printMessageWithLocation(Error, stat, "Invalid adressing type of operand");
         return activateErrorFlag(stat);;
     }
     return Yes;
 }
+
+
+
 
 /*gets an operand string and finds its addressing type
 (immediate, direct, relative, register),
@@ -268,7 +277,7 @@ Info operandAddressType(char* operand,  STATUS* stat){
     if (lookupRegister(operand) != NOT_FOUND) /*check id operand is Register*/
         return Register;
 
-    if (operand[0] == IMMEDIATE_IDENTIFIER){ /*check if operand is Immediate*/
+    if (operand[0] == IMMEDIATE_IDENTIFIER){ /*check if operand has the # prefix*/
         operand++;
         if (isValidAsNumber(operand)){
             if (isValidInWordRange(atoi(operand)) == Yes)
@@ -281,9 +290,9 @@ Info operandAddressType(char* operand,  STATUS* stat){
         printMessageWithLocation(Error, stat, "Operand is invalid as Immediate");
         return activateErrorFlag(stat);
     }
-    if (operand[0] == RELATIVE_IDENTIFIER){ /*check if operand is relative*/
+    if (operand[0] == RELATIVE_IDENTIFIER){ /*check if operand is has the % prefix*/
         operand++;
-        if (isValidAsSymbol(operand, stat)){
+        if (isValidAsSymbol(operand, stat) == Yes){
             sym = lookupSymbol(stat -> symbolTable, operand);
             if (sym!= NULL && (sym -> attr2)== Extern){
                     printMessageWithLocation(Error, stat,"Extern Label cannot be used in relative addressing");
@@ -291,21 +300,13 @@ Info operandAddressType(char* operand,  STATUS* stat){
             }
             else  return Relative;
         }
-        printMessageWithLocation(Error, stat,"Operand is an invalid symbol");
+        return activateErrorFlag(stat); /* error message  is printed by the isValidAsSymbol*/
+    }
+    if (isValidAsNumber(operand) == Yes ){
+        printMessageWithLocation(Error, stat,"Operand's addresing mode is undefined");
         return activateErrorFlag(stat);
     }
-    if (isValidAsSymbol(operand, stat))
+    if (isValidAsSymbol(operand, stat) == Yes)
         return Direct;
-    else  printMessageWithLocation(Error, stat,"Operand is an invalid symbol");
-    return activateErrorFlag(stat);
-}
-
-int lookupCommand(char* string){
-    int i;
-    SET_COMMAND_TABLE(cmdTable);
-
-    for(i = 0; i < COMMANDS_NUMBER ; i++)
-        if(strcmp(cmdTable[i].command,string) == 0 )
-            return i;
-    return NOT_FOUND;
+    else  return activateErrorFlag(stat);
 }

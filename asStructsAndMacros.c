@@ -127,7 +127,7 @@ STATUS* stat - pointer to statust structure, for easy access to current line num
 void addSymbol(LinkedList* symbolTable, short address, char* symbol, Info attr1, Info attr2, STATUS* stat){
     SYMBOL body;
     if (lookupSymbol(symbolTable, symbol) != NULL){
-        printMessageWithLocation(Error, stat, "Label is already in symbol table");
+        printMessageWithLocation(Error, stat, "Label has already been declared earlier");
         activateErrorFlag(stat);
     }
     body.address = address;

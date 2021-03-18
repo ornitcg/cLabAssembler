@@ -32,12 +32,24 @@ returns: FILE* - pointer to file if OK and NULL otherwise
 FILE* isValidFile(char* fileName, char* extention);
 
 
+
 /*
 Removes the last charachter in a given string
 params:
 char* string : a string to remove the last charachter from
 */
 void remLastChar(char* string);
+
+
+/*
+Counts hou many times the character c appears in string
+params:
+char* string - the string to count within.
+char c - the character to count in string.
+returns: the number of times c is in string.
+*/
+int countChar(char* string , char c);
+
 
 
 /*

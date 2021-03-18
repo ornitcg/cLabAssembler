@@ -13,10 +13,46 @@ Info parseCommand(char* command, char* line, STATUS* stat );
 returns 'Error' if input not valid
 and 'Ok' if found valid */
 void parseCommandOperands(char* line, STATUS* stat);
+
+
+
+/*
+Helper function called by parseCommandOperands only.
+Parses 0/1/2 operands from parameter line
+fits them into parameters opSrc and opDest regardless of their validity as operands
+errors are checked by the calling functions
+params:
+char* line - the input line after removal of the command string
+char* opSrc - a string to collect the source operand if found.
+char* opDest - a string to collect the destination operand if found.
+STATUS* stat - for easy access to line number
+returns number of operand found
+*/
 int getOperands(char* line,char* opSrc,char* opDest,STATUS* stat);
+
+
+
+
+/*
+Wrappper to buildFirstWord
+Adds to code table, the first word that fits lines of commands
+according to the number of operands.
+params:
+int opNum - the number of operands for command
+STATUS* stat - for info about source and destination operand addresses, and linke to codTable
+*/
 Info operandAddressType(char* operand, STATUS* stat);
+
+
+/*
+Gets an operand and its type as Source or Dest
+and check its validity for the current calling command
+according to the  command table
+Returns Yes if valid, and Error if not
+ */
 Info isValidAddressing(char* operand, Info opNumber, STATUS* stat);
-int lookupCommand(char* string);
+
+
 
 
 /*

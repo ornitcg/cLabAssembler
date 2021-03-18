@@ -34,4 +34,4 @@ utilsGeneral.o: utilsGeneral.c utilsGeneral.h
 	gcc -ansi -g -Wall -pedantic -c utilsGeneral.c
 
 clean:
-	rm *.o  assembler
+	rm *.o  #assembler

@@ -47,6 +47,24 @@ FILE* isValidFile(char* fileName, char* extention){
 }
 
 
+/*
+Counts hou many times the character c appears in string
+params:
+char* string - the string to count within.
+char c - the character to count in string.
+returns: the number of times c is in string.
+*/
+int countChar(char* string , char c){
+    int i, count =0;
+    int len = strlen(string);
+    if (len == 0)
+        return 0;
+    for(i = 0 ; i < len ; i++)
+        if (string[i] == c)
+            count++;
+    return count;
+}
+
 
 /*
 Removes the last charachter in a given string

@@ -238,11 +238,9 @@ DATA_IMG* getDataImageBody (Node* cursor);
 typedef char regArr[REGISTERS_NUMBER][REGISTER_LEN] ; /*for array of registers names*/
 #define SET_REG_ARR(x)  regArr x = {"r0","r1","r2", "r3","r4","r5","r6","r7"}
 
-typedef char reservedArr[5][MAX_LABEL] ; /*for array of registers names*/
-#define SET_RESERVED_ARR(x)  reservedArr x = {"data", "string", "entry","extern", "NULL"};
+typedef char reservedList[5][MAX_LABEL] ; /*for array of registers names*/
+#define SET_RESERVED_WORDS_LIST(x)  reservedList x = {"data", "string", "entry","extern", "NULL"};
 
-/*#define RES_WORDS_LIST {"data", "string", "entry","extern", "NULL"}*/
-/*#define char otherReserved*/
 
 /*****************************************COMMAND (x) TABLE*********************************************/
 

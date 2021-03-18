@@ -77,17 +77,16 @@ Info parseExtern(char* line, STATUS* stat){
         return activateErrorFlag(stat);
     }
     symBody = lookupSymbol(stat->symbolTable , line);
-
     if (symBody != NULL){ /*Found in symbol table*/
-        if (symBody -> attr2 == Entry ){ /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
-            printMessageWithLocation(Error, stat,"Symbol can't be assigned both extern and entry");
+        if (symBody -> attr2 != Extern ){
+             /*found in symbol table, checking the attr2 that is assumed to be used only for extern and entry attributes*/
+            printMessageWithLocation(Error, stat,"Local label cannot be assigned as external");
             return activateErrorFlag(stat);
         }
-        symBody -> attr2 = Extern;
     }
     else addSymbol(stat-> symbolTable, 0 /*address value*/,  line/*label*/, Empty /*attr1*/, Extern /*attr2*/,  stat);
 
-    return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
+    return Ok; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 }
 
 
@@ -117,7 +116,7 @@ Info parseEntry(char* line, STATUS* stat){
             return activateErrorFlag(stat);
         }
     symBody -> attr2 = Entry;
-    return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
+    return Ok; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
 
 }
 
@@ -161,8 +160,11 @@ Info instruction - for String or Data (enum Info type)
 STATUS* stat - for other status info and update
 */
 void parseData(char* line, Info instruction, STATUS* stat){
-    if (strlen(line) == 0 ){
-        printMessageWithLocation(Error, stat, "Missing data");
+    if (isEmptyString(line) == Yes ){
+        if (instruction == String )
+            printMessageWithLocation(Error, stat, "Missing string");
+        else
+            printMessageWithLocation(Error, stat, "Missing data");
         activateErrorFlag(stat);
         return;
     }
@@ -188,7 +190,7 @@ Info parseNumbersData(char* line, STATUS* stat){
 
     trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
     if (externalCommas(line)){
-        printMessageWithLocation(Error, stat, "External commas are not allowed");
+        printMessageWithLocation(Error, stat, "Extra comma found");
         return activateErrorFlag(stat);
     }
     while (line[0] != '\0'){
