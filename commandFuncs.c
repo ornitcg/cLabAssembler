@@ -65,12 +65,17 @@ void parseCommandOperands(char* line, STATUS* stat){
     int opNumFound , opNumAllowed, cmdIndex = stat -> commandNumber;
     char opSrc[MAX_LINE] ;
     char opDest[MAX_LINE] ;
-    Info errorStatus = Ok; /*instead of addressing*/
     SET_COMMAND_TABLE(cmd);
     opNumAllowed = cmd[cmdIndex].operands;          /*for readability*/
 
-    if(externalCommas(line) || countChar(line, COMMA) > 1){ /*comma before first operand or after last operand are not allowed*/
+    if(externalCommas(line) ){ /*comma before first operand or after last operand are not allowed*/
         printMessageWithLocation(Error, stat,"Extra comma found");
+        /*Allowed By Judy Issacs to generalize the type of Error*/
+        activateErrorFlag(stat);
+        return;
+    }
+    if( countChar(line, COMMA) > 1){ /*comma before first operand or after last operand are not allowed*/
+        printMessageWithLocation(Error, stat,"Extra operand or extra comma found");
         /*Allowed By Judy Issacs to generalize the type of Error*/
         activateErrorFlag(stat);
         return;
@@ -87,33 +92,34 @@ void parseCommandOperands(char* line, STATUS* stat){
     /*less operand than expected (assuming that if missing comma the whole string is received as one operand (most likely with spaces but I chose to look at it as a missing operand error))*/
     if (opNumFound < opNumAllowed ){
         printMessageWithLocation(Error, stat, "Missing Operand(s)");
-        errorStatus = Error;
-    }
+        activateErrorFlag(stat);
+        return;
+        }
     /*got more operands than expected*/
     else if ((opNumFound!=NOT_FOUND) && (opNumAllowed  < opNumFound)){
         printMessageWithLocation(Error, stat, "Found too many operands");
         /*Allowed By Judy to generalize the type of Error*/
-        errorStatus = Error;
-    }
-
-    if (stat -> srcOpAddressType == Error || stat -> srcOpAddressType == Error)
-        errorStatus = Error;
-
-    if (errorStatus == Ok ){
-        /*if (opNumFound == 0 && opNumAllowed == 0)*/ /*no operand expected, and 0 received*/
-        addFirstWord(opNumFound, stat);
-        if(opNumFound > 0 && opNumFound == opNumAllowed){
-                if (opNumAllowed == 1){
-                    addOperandWord(opDest, Dest, stat);
-                }
-                else { /*2 allowed*/
-                    addOperandWord(opSrc, Source , stat);
-                    addOperandWord(opDest, Dest , stat);
-                }
+        activateErrorFlag(stat);
+        return;
         }
+
+    if (stat -> srcOpAddressType == Error || stat -> srcOpAddressType == Error){
+        activateErrorFlag(stat);
+        return;
     }
-    else activateErrorFlag(stat);
-    
+
+    /*if (opNumFound == 0 && opNumAllowed == 0)*/ /*no operand expected, and 0 received*/
+    addFirstWord(opNumFound, stat);
+    if(opNumFound > 0 && opNumFound == opNumAllowed){
+            if (opNumAllowed == 1){
+                addOperandWord(opDest, Dest, stat);
+            }
+            else { /*2 allowed*/
+                addOperandWord(opSrc, Source , stat);
+                addOperandWord(opDest, Dest , stat);
+            }
+    }
+
 }
 
 
