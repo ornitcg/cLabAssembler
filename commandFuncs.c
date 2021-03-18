@@ -63,8 +63,8 @@ STATUS* stat - for easy access to current command and line info
 */
 void parseCommandOperands(char* line, STATUS* stat){
     int opNumFound , opNumAllowed, cmdIndex = stat -> commandNumber;
-    char* opSrc ;
-    char* opDest ;
+    char opSrc[MAX_LINE] ;
+    char opDest[MAX_LINE] ;
     Info errorStatus = Ok; /*instead of addressing*/
     SET_COMMAND_TABLE(cmd);
     opNumAllowed = cmd[cmdIndex].operands;          /*for readability*/
@@ -76,8 +76,7 @@ void parseCommandOperands(char* line, STATUS* stat){
         return;
     }
     /*Searching for operands blindly, Errors are checked later*/
-    opSrc = (char*)malloc(sizeof(line));
-    opDest = (char*)malloc(sizeof(line));
+
     opNumFound = getOperands(line, opSrc, opDest, stat); /*operands will be empty if not found*/
 
     /*saves the address types (Immediate/Direct/Relative/Register) found , for each operand, into status*/
@@ -114,9 +113,7 @@ void parseCommandOperands(char* line, STATUS* stat){
         }
     }
     else activateErrorFlag(stat);
-
-    free(opSrc);
-    free(opDest);
+    
 }
 
 
