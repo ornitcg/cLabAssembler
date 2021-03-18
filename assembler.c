@@ -16,15 +16,15 @@ also used a STATUS structure - that contains  all the needed system information 
 this structure goes as parameter to functions, as an easy way to pass complex info in one parameter, also makes a nicer code
 
 Assumptions:
-Maximum length of line is 80
-No comments in middle of line.
-Using the words 'symbol' and 'label' interchangably for the same thing
-Allowing no whitespaces between the colon of a label definition and the next thing (command/Instruction),
- since it was up to me - approved by JUDY ISSACS
-No floating point allowed even if the operand is still a whole number
-Ignoring the assumptin of 4096 words in RAM - approved by JUDY ISSACS
-Not allowing data numbers that  the range of signed 12 bits.
-If any error is found in the first scan, second scan will not occure.
+- Maximum length of line is 80 characters excluding '\n'
+- Nothing but whitespaces can come before comment.
+- Using the words 'symbol' and 'label' interchangably for the same thing
+- Allowing no whitespaces between the colon of a label definition and the next thing (command/Instruction),
+since it was up to me - approved by JUDY ISSACS
+- No floating point allowed even if the operand is still a whole number
+- Ignoring the assumptin of 4096 words in RAM - approved by JUDY ISSACS
+- Not allowing data numbers that  the range of signed 12 bits.
+- If any error is found in the first scan, second scan will not occure.
 
 */
 
@@ -64,7 +64,7 @@ void runAssembler(FILE* inputFile, char* fileName){
 }
 
 
-
+/* MAIN */
 int main(int argc, char *argv[]) {
 
   int i;
@@ -76,11 +76,8 @@ int main(int argc, char *argv[]) {
   for(i= 1 ; i < argc ; i++){
     fileName = argv[i];
     inputFile = isValidFile(fileName, EXT_AS);  /*input file contains a pointer to the opened file*/
-    if (inputFile != NULL) {
+    if (inputFile != NULL)
         runAssembler(inputFile, fileName);
-
-    }
   }
-
-  return 0;
+  return 1;
 }

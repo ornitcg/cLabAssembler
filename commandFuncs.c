@@ -74,7 +74,7 @@ void parseCommandOperands(char* line, STATUS* stat){
     stat -> destOpAddressType = operandAddressType(opDest , stat);
 
     if(externalCommas(line)){ /*comma before first operand or after last operand are not allowed*/
-        printMessageWithLocation(Error, stat,"Extra comma are not allowed");
+        printMessageWithLocation(Error, stat,"Extra comma found");
         /*Allowed By Judy Issacs to generalize the type of Error*/
         errorStatus = Error;
     }

@@ -31,7 +31,7 @@ void firstScan(FILE* inputFile , STATUS* stat){
     /*********************************************************************************************************/
     while(fgets(line, MAX_LINE, inputFile) != NULL){ /*each iteration of this loop is on a whole line from input file*/
         trimWhiteSpaces(line);    /*removes whitespaces from both ends and also the '\n' for each line read from file*/
-        fprintf(stderr,"\n\n [DEBUG] firstScan line#%d  line string: --|%s|--\n", stat->lineNumber,line);
+        /*fprintf(stderr,"\n\n [DEBUG] firstScan line#%d  line string: --|%s|--\n", stat->lineNumber,line);*/
         /*fprintf(stderr, "DEBUG IC %d, DC %d\n", stat->IC, stat->DC);*/
 
         if (!toIgnore(line) ){
@@ -45,9 +45,8 @@ void firstScan(FILE* inputFile , STATUS* stat){
                 /*restart line from end of label, "+1" stand for the colon in the end*/
             }
             /********************************** INSTRUCTION CHECK ***********************************/
-            fprintf(stderr,"[DEBUG] in first scan error for line = %d, error exists = %d \n", stat -> errorForLine, stat-> errorExists);
-
             if (stat -> errorForLine == No){
+
                 instType = parseInstruction(instruction, line, stat); /* value returned into instType= Yes/No/Error*/
 
                 if ( instType != Error && instType != No ){
@@ -172,7 +171,7 @@ void fillMissingDetailsInCodeTable(STATUS* stat){
 
         if ( strcmp(codeBody-> label,EMPTY_STRING)!= 0  && symbol == NULL ){
             /*any operand symbol should be found in the symbol table, thus error*/
-            printMessageWithLocation(Error, stat, "Symbol not defined \n");
+            printMessageWithLocation(Error, stat, "Found undefined symbol");
             activateErrorFlag(stat);
         }
         if ( symbol!= NULL && codeBody -> ARE == FillLater){ /* Find the relevant places to fill in*/

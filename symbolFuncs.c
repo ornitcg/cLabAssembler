@@ -1,3 +1,8 @@
+/*
+Author: Ornit Cohen Gindi
+This group of functions deal with parsing a symbol and checkig its validity
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,30 +13,21 @@
 #include "symbolFuncs.h"
 
 
-/*
-  Checks the possibility of the line to contain a label by searching for a ':'
-  params:   char* line - the string to search for a label in
-  returns:   1 if found, and 0 otherwise
-*/
-int containsLabelDef(char* line){
-  if (strchr(line, LABEL_IDENTIFIER)!= NULL)
-    return YES;
-  return NO;
-}
 
 /*
 Finds a definition of symbol at beggining of line.
 params:
-char* symbol - to collect the symbol defined in line, if found, otherwise, stays empty.
+
 char* line - the line to search within.
 STATUS* stat - for easy access to status info at error messages
-returns:
-
-returns Yes/No/Error*/
-Info parseSymbol(char* symbol , char* line, STATUS* stat){
+returns - Info (enum) Yes if a valid symbol was found, the defined symbol then in added to status
+                     No - if no symbol was found
+                     Error - if error found
+*/
+Info parseSymbol( char* line, STATUS* stat){
     int cursor = 0;
     char tmpSymbol[MAX_LINE] = EMPTY_STRING;
-    strcpy(symbol, EMPTY_STRING);
+
     /*line is supposed to be clean of heading whitespaces at this point*/
     cursor =  firstPosOfChar(line, LABEL_IDENTIFIER); /*find the first colon position*/
     if ((strlen(line) == 0) || (cursor == NOT_FOUND))
@@ -44,10 +40,13 @@ Info parseSymbol(char* symbol , char* line, STATUS* stat){
     }
 
     if (isValidAsSymbol(tmpSymbol, stat) == Yes){
-        strcpy(symbol, tmpSymbol ); /*get the string part until the colon sign*/
+        strcpy(stat ->label, tmpSymbol);
+        stat -> symbolFound =  Yes;
         return Yes ;
     }
-    else return activateErrorFlag(stat);
+    else
+        return activateErrorFlag(stat);
+
 }
 
 /*

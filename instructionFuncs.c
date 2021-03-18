@@ -73,7 +73,7 @@ Info parseExtern(char* line, STATUS* stat){
         return activateErrorFlag(stat);
     }
     if (isValidAsSymbol(line, stat) == Error){
-        printMessageWithLocation(Error, stat, "Invalid symbol after .extern instruction");
+        /* isValidAsSymbol prints out a message*/
         return activateErrorFlag(stat);
     }
     symBody = lookupSymbol(stat->symbolTable , line);
@@ -118,7 +118,7 @@ Info parseEntry(char* line, STATUS* stat){
         }
     symBody -> attr2 = Entry;
     return Yes; /*multiple external symbols are acceptable as non error, but there is no need to add to  symbol table*/
-    
+
 }
 
 
@@ -137,14 +137,15 @@ Info checkEntrySyntax(char* line, STATUS* stat){
         printMessageWithLocation(Error, stat,"Missing parameter after .entry instruction");
         return activateErrorFlag(stat);
     }
+    if (isValidAsSymbol(line, stat) == Error){
+        /* isValidAsSymbol prints out a message*/
+        return activateErrorFlag(stat);
+    }
     if (firstPosOfChar(line,WHITE_SPACE)!= NOT_FOUND){
         printMessageWithLocation(Error, stat, "Too many parameters after .entry instruction");
         return activateErrorFlag(stat);
     }
-    if (isValidAsSymbol(line, stat) == Error){
-        printMessageWithLocation(Error, stat, "Invalid symbol after .entry instruction");
-        return activateErrorFlag(stat);
-    }
+
     return Ok;
 
 }
@@ -184,7 +185,6 @@ Info parseNumbersData(char* line, STATUS* stat){
     int cursor = 0;
     short data;
     char dataString[MAX_LINE];
-    /*fprintf(stderr,"[DEBUG] in parsedata --%s--\n",line);*/
 
     trimWhiteSpaces(line); /*trim whitespaces from the what's left of line*/
     if (externalCommas(line)){

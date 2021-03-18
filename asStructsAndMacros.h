@@ -20,7 +20,7 @@ I chose this way because it is a read-only table, and it's easier and less messy
 #include "linkedList.h"
 #include "utilsGeneral.h"
 
-#define MAX_LINE 81
+#define MAX_LINE 82 /*to enable inclusion of \0 and \n*/
 #define MAX_LABEL 32
 #define MAX_INSTRUCTION 10
 #define MAX_CMD_LEN 5
